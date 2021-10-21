@@ -4,18 +4,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import study.template.domain.User;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @RequiredArgsConstructor
-public class UserDao {
+public class UserDaoV1 {
 
-    private final ConnectionMaker connectionMaker;
+    private final DataSource dataSource;
 
-    public void add(User user) throws ClassNotFoundException, SQLException{
-        Connection connection = connectionMaker.makeConnection();
+    public void add(User user) throws  SQLException{
+        Connection connection = dataSource.getConnection();
 
         PreparedStatement ps=connection.prepareStatement("insert into users(id,name,password) values(?,?,?)");
         ps.setString(1,user.getId());
@@ -28,8 +29,8 @@ public class UserDao {
         connection.close();
     }
 
-    public User get(String id) throws ClassNotFoundException,SQLException{
-        Connection connection= connectionMaker.makeConnection();
+    public User get(String id) throws SQLException{
+        Connection connection= dataSource.getConnection();
 
         PreparedStatement ps=connection.prepareStatement("select * from users where id=?");
         ps.setString(1,id);
@@ -57,8 +58,8 @@ public class UserDao {
         return user;
     }
 
-    public void deleteAll() throws ClassNotFoundException,SQLException{
-        Connection connection= connectionMaker.makeConnection();
+    public void deleteAll() throws SQLException{
+        Connection connection= dataSource.getConnection();
 
         PreparedStatement ps=connection.prepareStatement("delete from users");
         ps.executeUpdate();
@@ -67,8 +68,8 @@ public class UserDao {
         connection.close();
     }
 
-    public int getCount() throws ClassNotFoundException,SQLException{
-        Connection connection= connectionMaker.makeConnection();
+    public int getCount() throws SQLException{
+        Connection connection= dataSource.getConnection();
 
         PreparedStatement ps=connection.prepareStatement("select count(*) from users");
 
