@@ -2,8 +2,7 @@ package study.template.dao;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
-import study.template.dao.strategy.AddStatement;
-import study.template.dao.strategy.DeleteAllStatement;
+import study.template.dao.context.JdbcContext;
 import study.template.dao.strategy.StatementStrategy;
 import study.template.domain.User;
 
@@ -14,13 +13,24 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @RequiredArgsConstructor
-public class UserDaoV4 {
+public class UserDaoV6 {
 
+    private final JdbcContext jdbcContext;
     private final DataSource dataSource;
 
-    public void add(User user) throws  SQLException{
-        StatementStrategy st=new AddStatement(user);
-        jdbcContextWithStatementStrategy(st);
+    public void add(final User user) throws  SQLException{
+        jdbcContext.workWithStatementStrategy(new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection connection) throws SQLException {
+                PreparedStatement ps= connection.prepareStatement("insert into users(id,name,password) values(?,?,?)");
+
+                ps.setString(1, user.getId());
+                ps.setString(2, user.getName());
+                ps.setString(3, user.getPassword());
+
+                return ps;
+            }
+        });
     }
 
     public User get(String id) throws SQLException{
@@ -54,8 +64,13 @@ public class UserDaoV4 {
     }
 
     public void deleteAll() throws SQLException{
-        StatementStrategy stmt=new DeleteAllStatement();
-        jdbcContextWithStatementStrategy(stmt);
+        jdbcContext.workWithStatementStrategy(new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection connection) throws SQLException {
+                PreparedStatement ps= connection.prepareStatement("delete from users");
+                return ps;
+            }
+        });
     }
 
     public int getCount() throws SQLException{
@@ -98,35 +113,5 @@ public class UserDaoV4 {
             }
         }
 
-    }
-
-    public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException{
-        Connection connection=null;
-        PreparedStatement ps=null;
-
-        try{
-            connection=dataSource.getConnection();
-
-            ps=stmt.makePreparedStatement(connection);
-            ps.executeUpdate();
-        }catch(SQLException e){
-            throw e;
-        }finally {
-            if(ps!=null){
-                try{
-                    ps.close();
-                }catch(SQLException e){
-
-                }
-            }
-            if(connection!=null){
-                try{
-                    connection.close();
-                }catch(SQLException e){
-
-                }
-            }
-
-        }
     }
 }

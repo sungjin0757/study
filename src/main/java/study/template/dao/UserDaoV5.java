@@ -14,13 +14,23 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @RequiredArgsConstructor
-public class UserDaoV4 {
+public class UserDaoV5 {
 
     private final DataSource dataSource;
 
-    public void add(User user) throws  SQLException{
-        StatementStrategy st=new AddStatement(user);
-        jdbcContextWithStatementStrategy(st);
+    public void add(final User user) throws  SQLException{
+        jdbcContextWithStatementStrategy(new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection connection) throws SQLException {
+                PreparedStatement ps= connection.prepareStatement("insert into users(id,name,password) values(?,?,?)");
+
+                ps.setString(1, user.getId());
+                ps.setString(2, user.getName());
+                ps.setString(3, user.getPassword());
+
+                return ps;
+            }
+        });
     }
 
     public User get(String id) throws SQLException{
@@ -54,8 +64,13 @@ public class UserDaoV4 {
     }
 
     public void deleteAll() throws SQLException{
-        StatementStrategy stmt=new DeleteAllStatement();
-        jdbcContextWithStatementStrategy(stmt);
+        jdbcContextWithStatementStrategy(new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection connection) throws SQLException {
+                PreparedStatement ps= connection.prepareStatement("delete from users");
+                return ps;
+            }
+        });
     }
 
     public int getCount() throws SQLException{
