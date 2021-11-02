@@ -54,4 +54,9 @@ public class AppConfig {
     public UserDaoV6 userDaoV6(){
         return new UserDaoV6(jdbcContext(),dataSource());
     }
+
+    @Bean
+    public UserDaoV7 userDaoV7(){
+        return new UserDaoV7(jdbcContext(),dataSource());
+    }
 }

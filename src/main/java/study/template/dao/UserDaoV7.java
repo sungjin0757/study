@@ -13,7 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @RequiredArgsConstructor
-public class UserDaoV6 {
+public class UserDaoV7 {
 
     private final JdbcContext jdbcContext;
     private final DataSource dataSource;
@@ -64,13 +64,7 @@ public class UserDaoV6 {
     }
 
     public void deleteAll() throws SQLException{
-        jdbcContext.workWithStatementStrategy(new StatementStrategy() {
-            @Override
-            public PreparedStatement makePreparedStatement(Connection connection) throws SQLException {
-                PreparedStatement ps= connection.prepareStatement("delete from users");
-                return ps;
-            }
-        });
+        executeSql("delete from users");
     }
 
     public int getCount() throws SQLException{
@@ -114,4 +108,12 @@ public class UserDaoV6 {
         }
     }
 
+    private void executeSql(final String query) throws SQLException{
+        jdbcContext.workWithStatementStrategy(new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection connection) throws SQLException {
+                return connection.prepareStatement(query);
+            }
+        });
+    }
 }
