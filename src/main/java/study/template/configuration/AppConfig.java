@@ -2,9 +2,12 @@ package study.template.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import study.template.dao.*;
 import study.template.dao.context.JdbcContext;
+import study.template.dao.context.JdbcContextV2;
 
 import javax.sql.DataSource;
 import java.sql.Driver;
@@ -25,9 +28,20 @@ public class AppConfig {
         return dataSource;
     }
 
+
+    @Bean
+    public JdbcOperations jdbcOperations(){
+        return new JdbcTemplate(dataSource());
+    }
+
     @Bean
     public JdbcContext jdbcContext(){
         return new JdbcContext(dataSource());
+    }
+
+    @Bean
+    public JdbcContextV2 jdbcContextV2(){
+        return new JdbcContextV2(dataSource());
     }
 
     @Bean
@@ -58,5 +72,15 @@ public class AppConfig {
     @Bean
     public UserDaoV7 userDaoV7(){
         return new UserDaoV7(jdbcContext(),dataSource());
+    }
+
+    @Bean
+    public UserDaoV8 userDaoV8(){
+        return new UserDaoV8(jdbcContextV2(),dataSource());
+    }
+
+    @Bean
+    public UserDaoV9 userDaoV9(){
+        return new UserDaoV9(jdbcOperations());
     }
 }
