@@ -6,8 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.ContextConfiguration;
 import study.exception.configuration.AppConfig;
@@ -20,7 +20,7 @@ import java.util.Optional;
 @SpringBootTest
 @ContextConfiguration(classes=AppConfig.class)
 @Slf4j
-public class UserDaoTest {
+public class UserDaoV1Test {
 
     @Autowired
     UserDao userDao;
@@ -93,7 +93,7 @@ public class UserDaoTest {
         Assertions.assertThat(user.getName()).isEqualTo("hong");
         Assertions.assertThat(user.getPassword()).isEqualTo("1234");
 
-        org.junit.jupiter.api.Assertions.assertThrows(DuplicateUserException.class,()->{
+        org.junit.jupiter.api.Assertions.assertThrows(DuplicateKeyException.class,()->{
             userDao.add(user1);
         });
     }
@@ -103,7 +103,7 @@ public class UserDaoTest {
     void 모든유저불러오기_테스트(){
         userDao.deleteAll();
 
-        List<User> findAllUser=userDao.getAll();
+        List<User> findAllUser= userDao.getAll();
 
         Assertions.assertThat(findAllUser.size()).isEqualTo(0);
 
@@ -116,7 +116,7 @@ public class UserDaoTest {
         userDao.add(user3);
         Assertions.assertThat(userDao.getCount()).isEqualTo(3);
 
-        findAllUser=userDao.getAll();
+        findAllUser= userDao.getAll();
 
         Assertions.assertThat(findAllUser.size()).isEqualTo(3);
         checkUser(user1,findAllUser.get(0));

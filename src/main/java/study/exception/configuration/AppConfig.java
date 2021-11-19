@@ -8,6 +8,8 @@ import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import study.exception.dao.UserDao;
+import study.exception.dao.UserDaoImpl;
+import study.exception.dao.UserDaoV1;
 
 import javax.sql.DataSource;
 
@@ -35,6 +37,6 @@ public class AppConfig {
 
     @Bean
     public UserDao userDao(){
-        return new UserDao(jdbcOperations());
+        return new UserDaoImpl(jdbcOperations());
     }
 }
