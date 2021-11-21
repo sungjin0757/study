@@ -21,6 +21,7 @@ import java.util.List;
 public class UserDaoV9 {
 
     private final JdbcOperations jdbcOperations;
+
     private RowMapper<User> userMapper=new RowMapper<User>() {
         @Override
         public User mapRow(ResultSet rs, int rowNum) throws SQLException {

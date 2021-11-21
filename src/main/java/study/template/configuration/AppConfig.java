@@ -1,7 +1,10 @@
 package study.template.configuration;
 
+import lombok.RequiredArgsConstructor;
+import org.h2.Driver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
@@ -10,20 +13,22 @@ import study.template.dao.context.JdbcContext;
 import study.template.dao.context.JdbcContextV2;
 
 import javax.sql.DataSource;
-import java.sql.Driver;
 
 
 @Configuration
+@RequiredArgsConstructor
 public class AppConfig {
+
+    private final Environment env;
 
     @Bean
     public DataSource dataSource(){
         SimpleDriverDataSource dataSource=new SimpleDriverDataSource();
 
         dataSource.setDriverClass(org.h2.Driver.class);
-        dataSource.setUrl("jdbc:h2:tcp://localhost/~/templatetest");
-        dataSource.setUsername("sa");
-        dataSource.setPassword("1234");
+        dataSource.setUrl(env.getProperty("spring.datasource.url"));
+        dataSource.setUsername(env.getProperty("spring.datasource.username"));
+        dataSource.setPassword(env.getProperty("spring.datasource.password"));
 
         return dataSource;
     }
