@@ -30,12 +30,20 @@ public class UserDaoTest {
 
     @BeforeEach
     void setUp(){
-        this.user1=createUser("1","hong","1234");
-        this.user2=createUser("2","hong1","1234");
-        this.user3=createUser("3","hong12","1234");
+        this.user1=createUser("1","hong","1234",Level.BASIC,1,0);
+        this.user2=createUser("2","hong1","1234",Level.SILVER,50,10);
+        this.user3=createUser("3","hong12","1234",Level.GOLD,55,30);
 
         log.info("userService = {}",this.userDao);
         log.info("this = {} ",this);
+    }
+
+    @Test
+    @DisplayName("Enum Test")
+    void enum_테스트(){
+        log.info("Level={}",Level.BASIC);
+        log.info("Level Value={}",Level.BASIC.getValue());
+        log.info("Level Type={}",String.valueOf(Level.BASIC).getClass().getName());
     }
 
     @Test
@@ -58,16 +66,25 @@ public class UserDaoTest {
         Assertions.assertThat(user1.getId()).isEqualTo(findUser1.getId());
         Assertions.assertThat(user1.getName()).isEqualTo(findUser1.getName());
         Assertions.assertThat(user1.getPassword()).isEqualTo(findUser1.getPassword());
+        Assertions.assertThat(user1.getLevel()).isEqualTo(findUser1.getLevel());
+        Assertions.assertThat(user1.getLogin()).isEqualTo(findUser1.getLogin());
+        Assertions.assertThat(user1.getRecommend()).isEqualTo(findUser1.getRecommend());
 
         User findUser2 = userDao.get("2").get();
         Assertions.assertThat(user2.getId()).isEqualTo(findUser2.getId());
         Assertions.assertThat(user2.getName()).isEqualTo(findUser2.getName());
         Assertions.assertThat(user2.getPassword()).isEqualTo(findUser2.getPassword());
+        Assertions.assertThat(user2.getLevel()).isEqualTo(findUser2.getLevel());
+        Assertions.assertThat(user2.getLogin()).isEqualTo(findUser2.getLogin());
+        Assertions.assertThat(user2.getRecommend()).isEqualTo(findUser2.getRecommend());
 
         User findUser3 = userDao.get("3").get();
         Assertions.assertThat(user3.getId()).isEqualTo(findUser3.getId());
         Assertions.assertThat(user3.getName()).isEqualTo(findUser3.getName());
         Assertions.assertThat(user3.getPassword()).isEqualTo(findUser3.getPassword());
+        Assertions.assertThat(user3.getLevel()).isEqualTo(findUser3.getLevel());
+        Assertions.assertThat(user3.getLogin()).isEqualTo(findUser3.getLogin());
+        Assertions.assertThat(user3.getRecommend()).isEqualTo(findUser3.getRecommend());
     }
 
     @Test
@@ -123,17 +140,44 @@ public class UserDaoTest {
         checkUser(user3,findAllUser.get(2));
 
     }
+
+    @Test
+    @DisplayName("Update Test")
+    void 수정_테스트(){
+        userDao.deleteAll();
+
+        userDao.add(user1);
+        userDao.add(user2);
+
+        user1.updateLevel(Level.GOLD);
+        user1.updateLogin(50);
+        user1.updateRecommend(30);
+        userDao.update(user1);
+
+        User findUser1=userDao.get(user1.getId()).get();
+        checkUser(user1,findUser1);
+
+        User findUser2 = userDao.get(user2.getId()).get();
+        checkUser(user2,findUser2);
+    }
+
     private void checkUser(User user1,User user2){
         Assertions.assertThat(user1.getId()).isEqualTo(user2.getId());
         Assertions.assertThat(user1.getName()).isEqualTo(user2.getName());
         Assertions.assertThat(user1.getPassword()).isEqualTo(user2.getPassword());
+        Assertions.assertThat(user1.getLevel()).isEqualTo(user2.getLevel());
+        Assertions.assertThat(user1.getLogin()).isEqualTo(user2.getLogin());
+        Assertions.assertThat(user1.getRecommend()).isEqualTo(user2.getRecommend());
     }
 
-    private User createUser(String id,String name,String password){
+    private User createUser(String id,String name,String password,Level level,int login,int recommend){
         return User.createUser()
                 .id(id)
                 .name(name)
                 .password(password)
+                .level(level)
+                .login(login)
+                .recommend(recommend)
                 .build();
     }
 }

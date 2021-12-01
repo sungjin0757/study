@@ -22,14 +22,18 @@ public class UserDaoImpl implements UserDao{
                     .id(rs.getString("id"))
                     .password(rs.getString("password"))
                     .name(rs.getString("name"))
+                    .level(Level.valueOf(rs.getInt("level")))
+                    .login(rs.getInt("login"))
+                    .recommend(rs.getInt("recommend"))
                     .build();
         }
     };
 
     @Override
     public void add(User user) {
-        jdbcOperations.update("insert into users(id,name,password) values(?,?,?)",
-                user.getId(),user.getName(),user.getPassword());
+        jdbcOperations.update("insert into users(id,name,password,level,login,recommend) values(?,?,?,?,?,?)",
+                user.getId(),user.getName(),user.getPassword()
+                ,user.getLevel().getValue(),user.getLogin(),user.getRecommend());
     }
 
     @Override
@@ -51,5 +55,12 @@ public class UserDaoImpl implements UserDao{
     @Override
     public int getCount() {
         return jdbcOperations.queryForObject("select count(*) from users",Integer.class);
+    }
+
+    @Override
+    public void update(User user) {
+        jdbcOperations.update("update users set name=?,password=?,level=?,login=?,recommend=? where id=?",
+                user.getName(), user.getPassword(),user.getLevel().getValue()
+                ,user.getLogin(),user.getRecommend(),user.getId());
     }
 }
