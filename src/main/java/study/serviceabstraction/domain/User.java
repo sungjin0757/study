@@ -4,7 +4,10 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import study.serviceabstraction.dao.Level;
+
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access= AccessLevel.PROTECTED)
@@ -17,6 +20,8 @@ public class User {
     private Level level;
     private int login;
     private int recommend;
+    private LocalDateTime createdAt;
+    private LocalDateTime lastUpgraded;
 
     public void updateLevel(Level level){
         this.level=level;
@@ -30,13 +35,26 @@ public class User {
         this.recommend=recommend;
     }
 
+    public void upgradeLevel(){
+        Level next=this.level.getNext();
+        if(next==null){
+            throw new IllegalStateException(this.level+"은 현재 업그레이드가 불가능합니다.");
+        }
+        updateLevel(next);
+
+        this.lastUpgraded=LocalDateTime.now();
+    }
+
     @Builder(builderMethodName = "createUser")
-    public User(String id, String name, String password,Level level,int login,int recommend){
+    public User(String id, String name, String password,Level level,int login,int recommend
+            ,LocalDateTime createdAt,LocalDateTime lastUpgraded){
         this.id=id;
         this.name=name;
         this.password=password;
         this.level=level;
         this.login=login;
         this.recommend=recommend;
+        this.createdAt=createdAt;
+        this.lastUpgraded=lastUpgraded;
     }
 }

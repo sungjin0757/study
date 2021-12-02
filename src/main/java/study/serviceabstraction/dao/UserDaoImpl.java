@@ -7,6 +7,7 @@ import study.serviceabstraction.domain.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,15 +26,19 @@ public class UserDaoImpl implements UserDao{
                     .level(Level.valueOf(rs.getInt("level")))
                     .login(rs.getInt("login"))
                     .recommend(rs.getInt("recommend"))
+                    .createdAt(rs.getTimestamp("createdAt").toLocalDateTime())
+                    .lastUpgraded(rs.getTimestamp("lastUpgraded").toLocalDateTime())
                     .build();
         }
     };
 
     @Override
     public void add(User user) {
-        jdbcOperations.update("insert into users(id,name,password,level,login,recommend) values(?,?,?,?,?,?)",
+        jdbcOperations.update("insert into users(id,name,password,level,login,recommend,createdAt,lastUpgraded) " +
+                        "values(?,?,?,?,?,?,?,?)",
                 user.getId(),user.getName(),user.getPassword()
-                ,user.getLevel().getValue(),user.getLogin(),user.getRecommend());
+                ,user.getLevel().getValue(),user.getLogin(),user.getRecommend()
+                , Timestamp.valueOf(user.getCreatedAt()),Timestamp.valueOf(user.getLastUpgraded()));
     }
 
     @Override
@@ -59,8 +64,9 @@ public class UserDaoImpl implements UserDao{
 
     @Override
     public void update(User user) {
-        jdbcOperations.update("update users set name=?,password=?,level=?,login=?,recommend=? where id=?",
+        jdbcOperations.update("update users set name=?,password=?,level=?,login=?,recommend=?,createdAt=?," +
+                        "lastUpgraded=? where id=?",
                 user.getName(), user.getPassword(),user.getLevel().getValue()
-                ,user.getLogin(),user.getRecommend(),user.getId());
+                ,user.getLogin(),user.getRecommend(),user.getCreatedAt(),user.getLastUpgraded(),user.getId());
     }
 }
