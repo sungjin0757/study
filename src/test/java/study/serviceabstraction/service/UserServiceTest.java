@@ -13,6 +13,7 @@ import study.serviceabstraction.dao.Level;
 import study.serviceabstraction.dao.UserDao;
 import study.serviceabstraction.domain.User;
 
+import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +29,9 @@ public class UserServiceTest {
 
     @Autowired
     UserDao userDao;
+
+    @Autowired
+    DataSource dataSource;
 
     List<User> users;
 
@@ -53,7 +57,7 @@ public class UserServiceTest {
 
     @Test
     @DisplayName("Business Logic Test")
-    void 비즈니스_로직_테스트(){
+    void 비즈니스_로직_테스트() throws Exception{
         userDao.deleteAll();
 
         for(User user:this.users){
@@ -87,8 +91,8 @@ public class UserServiceTest {
 
     @Test
     @DisplayName("Rollback Test")
-    void 롤백_태스트(){
-        UserService testUserService=new TestUserService(userDao,users.get(2).getId());
+    void 롤백_태스트() throws Exception{
+        UserService testUserService=new TestUserService(userDao,dataSource,users.get(2).getId());
 
         userDao.deleteAll();
 
@@ -141,8 +145,8 @@ public class UserServiceTest {
     static class TestUserService extends UserService{
         private final String id;
 
-        public TestUserService(UserDao userDao, String id) {
-            super(userDao);
+        public TestUserService(UserDao userDao, DataSource dataSource, String id) {
+            super(userDao,dataSource);
             this.id = id;
         }
 

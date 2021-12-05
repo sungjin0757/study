@@ -6,7 +6,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.transaction.PlatformTransactionManager;
 import study.serviceabstraction.dao.UserDao;
 import study.serviceabstraction.dao.UserDaoImpl;
 import study.serviceabstraction.service.UserService;
@@ -29,6 +31,11 @@ public class AppConfig {
 
         return dataSource;
     }
+    
+    @Bean
+    public PlatformTransactionManager transactionManager(){
+        return new DataSourceTransactionManager(dataSource());
+    }
 
     @Bean
     public JdbcOperations jdbcOperations(){
@@ -42,6 +49,6 @@ public class AppConfig {
 
     @Bean
     public UserService userService(){
-        return new UserService(userDao());
+        return new UserService(userDao(),transactionManager());
     }
 }
