@@ -20,6 +20,7 @@ public class User {
     private Level level;
     private int login;
     private int recommend;
+    private String email;
     private LocalDateTime createdAt;
     private LocalDateTime lastUpgraded;
 
@@ -46,7 +47,7 @@ public class User {
     }
 
     @Builder(builderMethodName = "createUser")
-    public User(String id, String name, String password,Level level,int login,int recommend
+    public User(String id, String name, String password,Level level,int login,int recommend, String email
             ,LocalDateTime createdAt,LocalDateTime lastUpgraded){
         this.id=id;
         this.name=name;
@@ -54,6 +55,7 @@ public class User {
         this.level=level;
         this.login=login;
         this.recommend=recommend;
+        this.email=email;
         this.createdAt=createdAt;
         this.lastUpgraded=lastUpgraded;
     }

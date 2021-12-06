@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.transaction.PlatformTransactionManager;
 import study.serviceabstraction.configuration.AppConfig;
 import study.serviceabstraction.dao.Level;
 import study.serviceabstraction.dao.UserDao;
@@ -33,19 +34,22 @@ public class UserServiceTest {
     @Autowired
     DataSource dataSource;
 
+    @Autowired
+    PlatformTransactionManager transactionManager;
+
     List<User> users;
 
     @BeforeEach
     void setUp(){
         users= Arrays.asList(
                 createUser("1","hong","1234",Level.BASIC,UserService.LOG_COUNT_FOR_SILVER-1,0
-                        ,LocalDateTime.now(),LocalDateTime.now()),
+                        ,"sungjin0757@naver.com",LocalDateTime.now(),LocalDateTime.now()),
                 createUser("2","hong1","1234",Level.BASIC, UserService.LOG_COUNT_FOR_SILVER,10
-                        ,LocalDateTime.now(),LocalDateTime.now()),
+                        ,"sungjin0757@naver.com",LocalDateTime.now(),LocalDateTime.now()),
                 createUser("3","hong12","1234",Level.SILVER,55,UserService.REC_COUNT_FOR_GOLD
-                        ,LocalDateTime.now(),LocalDateTime.now()),
+                        ,"sungjin0757@naver.com",LocalDateTime.now(),LocalDateTime.now()),
                 createUser("4","hong22","1234",Level.GOLD,60,UserService.REC_COUNT_FOR_GOLD
-                        ,LocalDateTime.now(),LocalDateTime.now())
+                        ,"sungjin0757@naver.com",LocalDateTime.now(),LocalDateTime.now())
         );
     }
 
@@ -92,7 +96,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("Rollback Test")
     void 롤백_태스트() throws Exception{
-        UserService testUserService=new TestUserService(userDao,dataSource,users.get(2).getId());
+        UserService testUserService=new TestUserService(userDao,transactionManager,users.get(2).getId());
 
         userDao.deleteAll();
 
@@ -109,7 +113,7 @@ public class UserServiceTest {
         checkUpdateLevel(users.get(1),false);
     }
 
-    private User createUser(String id, String name, String password, Level level, int login, int recommend,
+    private User createUser(String id, String name, String password, Level level, int login, int recommend,String email,
                             LocalDateTime createdAt,LocalDateTime lastUpgraded){
         return User.createUser()
                 .id(id)
@@ -118,6 +122,7 @@ public class UserServiceTest {
                 .level(level)
                 .login(login)
                 .recommend(recommend)
+                .email(email)
                 .createdAt(createdAt)
                 .lastUpgraded(lastUpgraded)
                 .build();
@@ -145,8 +150,8 @@ public class UserServiceTest {
     static class TestUserService extends UserService{
         private final String id;
 
-        public TestUserService(UserDao userDao, DataSource dataSource, String id) {
-            super(userDao,dataSource);
+        public TestUserService(UserDao userDao, PlatformTransactionManager transactionManager, String id) {
+            super(userDao,transactionManager);
             this.id = id;
         }
 

@@ -5,6 +5,8 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import study.serviceabstraction.dao.Level;
 import study.serviceabstraction.dao.UserDao;
@@ -23,6 +25,7 @@ public class UserService {
      * V1버전 특정 JDBC Connection에 의존하는 상태
      */
 //    private final DataSource dataSource;
+
     private final PlatformTransactionManager transactionManager;
 
     public static final int LOG_COUNT_FOR_SILVER=50;
@@ -68,6 +71,26 @@ public class UserService {
 //        }
 //
 //    }
+
+    /**
+     * 스프링 트랜잭션 활용
+     */
+    public void upgradeLevels(){
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+
+        try{
+            List<User> users=userDao.getAll();
+            for(User user:users){
+                if(checkUpgrade(user)){
+                    upgradeLevel(user);
+                }
+            }
+            transactionManager.commit(status);
+        }catch(Exception e){
+            transactionManager.rollback(status);
+            throw e;
+        }
+    }
 
     public void add(User user){
         if(user.getLevel()==null)

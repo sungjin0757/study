@@ -31,11 +31,11 @@ public class UserDaoTest {
 
     @BeforeEach
     void setUp(){
-        this.user1=createUser("1","hong","1234",Level.BASIC,1,0,
+        this.user1=createUser("1","hong","1234",Level.BASIC,1,0,"sungjin0757@naver.com",
                 LocalDateTime.now(),LocalDateTime.now());
-        this.user2=createUser("2","hong1","1234",Level.SILVER,50,10,
+        this.user2=createUser("2","hong1","1234",Level.SILVER,50,10,"sungjin0757@naver.com",
                 LocalDateTime.now(),LocalDateTime.now());
-        this.user3=createUser("3","hong12","1234",Level.GOLD,55,30,
+        this.user3=createUser("3","hong12","1234",Level.GOLD,55,30,"sungjin0757@naver.com",
                 LocalDateTime.now(),LocalDateTime.now());
 
         log.info("userService = {}",this.userDao);
@@ -174,7 +174,7 @@ public class UserDaoTest {
         Assertions.assertThat(user1.getRecommend()).isEqualTo(user2.getRecommend());
     }
 
-    private User createUser(String id,String name,String password,Level level,int login,int recommend,
+    private User createUser(String id,String name,String password,Level level,int login,int recommend,String email,
                             LocalDateTime createdAt, LocalDateTime lastUpgraded){
         return User.createUser()
                 .id(id)
@@ -182,6 +182,7 @@ public class UserDaoTest {
                 .password(password)
                 .level(level)
                 .login(login)
+                .email(email)
                 .createdAt(createdAt)
                 .lastUpgraded(lastUpgraded)
                 .recommend(recommend)
