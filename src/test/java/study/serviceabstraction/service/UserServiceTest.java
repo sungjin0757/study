@@ -1,5 +1,6 @@
 package study.serviceabstraction.service;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,6 +8,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mail.MailException;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.PlatformTransactionManager;
 import study.serviceabstraction.configuration.AppConfig;
@@ -16,10 +21,7 @@ import study.serviceabstraction.domain.User;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 
 @SpringBootTest
@@ -36,6 +38,9 @@ public class UserServiceTest {
 
     @Autowired
     PlatformTransactionManager transactionManager;
+
+    @Autowired
+    MailSender mailSender;
 
     List<User> users;
 
@@ -61,6 +66,7 @@ public class UserServiceTest {
 
     @Test
     @DisplayName("Business Logic Test")
+    @DirtiesContext
     void 비즈니스_로직_테스트() throws Exception{
         userDao.deleteAll();
 
@@ -68,12 +74,20 @@ public class UserServiceTest {
             userService.add(user);
         }
 
+        MockMailSender mockMailSender=new MockMailSender();
+        userService=new UserService(userDao,transactionManager,mockMailSender);
+
         userService.upgradeLevels();
 
         checkUpdateLevel(users.get(0),false);
         checkUpdateLevel(users.get(1),true);
         checkUpdateLevel(users.get(2),true);
         checkUpdateLevel(users.get(3),false);
+
+        List<String> request=mockMailSender.getRequests();
+        Assertions.assertThat(request.size()).isEqualTo(2);
+        Assertions.assertThat(request.get(0)).isEqualTo(users.get(1).getEmail());
+        Assertions.assertThat(request.get(1)).isEqualTo(users.get(2).getEmail());
     }
 
     @Test
@@ -96,7 +110,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("Rollback Test")
     void 롤백_태스트() throws Exception{
-        UserService testUserService=new TestUserService(userDao,transactionManager,users.get(2).getId());
+        UserService testUserService=new TestUserService(userDao,transactionManager,mailSender,users.get(2).getId());
 
         userDao.deleteAll();
 
@@ -150,8 +164,9 @@ public class UserServiceTest {
     static class TestUserService extends UserService{
         private final String id;
 
-        public TestUserService(UserDao userDao, PlatformTransactionManager transactionManager, String id) {
-            super(userDao,transactionManager);
+        public TestUserService(UserDao userDao, PlatformTransactionManager transactionManager, MailSender mailSender,
+                               String id) {
+            super(userDao,transactionManager,mailSender);
             this.id = id;
         }
 
@@ -160,6 +175,21 @@ public class UserServiceTest {
             if(user.getId().equals(this.id))
                 throw new TestUserServiceException();
             super.upgradeLevel(user);
+        }
+    }
+
+    @Getter
+    static class MockMailSender implements MailSender{
+        private List<String> requests=new ArrayList<>();
+
+        @Override
+        public void send(SimpleMailMessage simpleMessage) throws MailException {
+            requests.add(simpleMessage.getTo()[0]);
+        }
+
+        @Override
+        public void send(SimpleMailMessage... simpleMessages) throws MailException {
+
         }
     }
 

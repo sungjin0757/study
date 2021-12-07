@@ -3,7 +3,11 @@ package study.serviceabstraction.service;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+
+
 import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -12,9 +16,18 @@ import study.serviceabstraction.dao.Level;
 import study.serviceabstraction.dao.UserDao;
 import study.serviceabstraction.domain.User;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Properties;
 
 @RequiredArgsConstructor
 public class UserService {
@@ -27,6 +40,7 @@ public class UserService {
 //    private final DataSource dataSource;
 
     private final PlatformTransactionManager transactionManager;
+    private final MailSender mailSender;
 
     public static final int LOG_COUNT_FOR_SILVER=50;
     public static final int REC_COUNT_FOR_GOLD=30;
@@ -101,6 +115,41 @@ public class UserService {
     protected void upgradeLevel(User user){
         user.upgradeLevel();
         userDao.update(user);
+        sendUpgradeMail(user);
+    }
+
+    /**
+     *
+     * 실제 smtp서버 연동. 즉, 네트워크 연결 및 부하가 많은 작업 테스트만을 하기에는 Heavy.
+     */
+//    private void sendUpgradeMail(User user){
+//        Properties props=new Properties();
+//        props.put("mail.smtp.host","mail.ksug.org");
+//        Session s=Session.getInstance(props,null);
+//
+//        MimeMessage mimeMessage=new MimeMessage(s);
+//        try{
+//            mimeMessage.setFrom(new InternetAddress("admin@ksug.org"));
+//            mimeMessage.addRecipient(Message.RecipientType.TO,new InternetAddress(user.getEmail()));
+//            mimeMessage.setSubject("Upgrade 안내");
+//            mimeMessage.setText("사용자님의 등급이 "+user.getLevel().name()+"로 업그레이드 되셨습니다.");
+//
+//            Transport.send(mimeMessage);
+//        }catch(AddressException e){
+//            throw new RuntimeException(e);
+//        }catch (MessagingException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
+    private void sendUpgradeMail(User user){
+        SimpleMailMessage mailMessage=new SimpleMailMessage();
+        mailMessage.setTo(user.getEmail());
+        mailMessage.setFrom("admin");
+        mailMessage.setSubject("Upgrade 안내");
+        mailMessage.setText("사용자님의 등급이 "+user.getLevel()+"로 업그레이드 돠었습니다.");
+
+        mailSender.send(mailMessage);
     }
 
     private boolean checkUpgrade(User user){
