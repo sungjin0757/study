@@ -33,6 +33,9 @@ public class UserServiceTest {
     UserService userService;
 
     @Autowired
+    UserServiceImpl userServiceImpl;
+
+    @Autowired
     UserDao userDao;
 
     @Autowired
@@ -49,13 +52,13 @@ public class UserServiceTest {
     @BeforeEach
     void setUp(){
         users= Arrays.asList(
-                createUser("1","hong","1234",Level.BASIC,UserService.LOG_COUNT_FOR_SILVER-1,0
+                createUser("1","hong","1234",Level.BASIC, UserServiceImpl.LOG_COUNT_FOR_SILVER-1,0
                         ,"sungjin0757@naver.com",LocalDateTime.now(),LocalDateTime.now()),
-                createUser("2","hong1","1234",Level.BASIC, UserService.LOG_COUNT_FOR_SILVER,10
+                createUser("2","hong1","1234",Level.BASIC, UserServiceImpl.LOG_COUNT_FOR_SILVER,10
                         ,"sungjin0757@naver.com",LocalDateTime.now(),LocalDateTime.now()),
-                createUser("3","hong12","1234",Level.SILVER,55,UserService.REC_COUNT_FOR_GOLD
+                createUser("3","hong12","1234",Level.SILVER,55, UserServiceImpl.REC_COUNT_FOR_GOLD
                         ,"sungjin0757@naver.com",LocalDateTime.now(),LocalDateTime.now()),
-                createUser("4","hong22","1234",Level.GOLD,60,UserService.REC_COUNT_FOR_GOLD
+                createUser("4","hong22","1234",Level.GOLD,60, UserServiceImpl.REC_COUNT_FOR_GOLD
                         ,"sungjin0757@naver.com",LocalDateTime.now(),LocalDateTime.now())
         );
     }
@@ -77,7 +80,7 @@ public class UserServiceTest {
         }
 
         MockMailSender mockMailSender=new MockMailSender();
-        userService=new UserService(userDao,transactionManager,mockMailSender);
+        userService=new UserServiceImpl(userDao,mockMailSender);
 
         userService.upgradeLevels();
 
@@ -112,8 +115,9 @@ public class UserServiceTest {
     @Test
     @DisplayName("Rollback Test")
     void 롤백_태스트() throws Exception{
-        UserService testUserService=new TestUserService(userDao,transactionManager,mailSender,users.get(2).getId());
+        TestUserService testUserService=new TestUserService(userDao,mailSender,users.get(2).getId());
 
+        UserServiceTx userServiceTx=new UserServiceTx(testUserService,transactionManager);
         userDao.deleteAll();
 
         for(User user:users){
@@ -121,7 +125,7 @@ public class UserServiceTest {
         }
 
         try{
-           testUserService.upgradeLevels();
+           userServiceTx.upgradeLevels();
         }catch(TestUserServiceException e){
 
         }
@@ -163,12 +167,12 @@ public class UserServiceTest {
         }
     }
 
-    static class TestUserService extends UserService{
+    static class TestUserService extends UserServiceImpl {
         private final String id;
 
-        public TestUserService(UserDao userDao, PlatformTransactionManager transactionManager, MailSender mailSender,
+        public TestUserService(UserDao userDao, MailSender mailSender,
                                String id) {
-            super(userDao,transactionManager,mailSender);
+            super(userDao,mailSender);
             this.id = id;
         }
 

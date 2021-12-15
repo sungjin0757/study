@@ -14,6 +14,8 @@ import study.aop.service.DummyMailSender;
 import study.aop.dao.UserDao;
 import study.aop.dao.UserDaoImpl;
 import study.aop.service.UserService;
+import study.aop.service.UserServiceImpl;
+import study.aop.service.UserServiceTx;
 
 import javax.sql.DataSource;
 
@@ -56,7 +58,12 @@ public class AppConfig {
 
     @Bean
     public UserService userService(){
-        return new UserService(userDao(),transactionManager(),mailSender());
+        return new UserServiceTx(userServiceImpl(),transactionManager());
+    }
+
+    @Bean
+    public UserService userServiceImpl(){
+        return new UserServiceImpl(userDao(),mailSender());
     }
 
 }
