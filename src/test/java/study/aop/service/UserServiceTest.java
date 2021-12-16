@@ -1,10 +1,13 @@
 package study.aop.service;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mail.MailException;
@@ -20,10 +23,7 @@ import study.aop.domain.User;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 
 @SpringBootTest
@@ -73,21 +73,17 @@ public class UserServiceTest {
     @DisplayName("Business Logic Test")
     @DirtiesContext
     void 비즈니스_로직_테스트() throws Exception{
-        userDao.deleteAll();
-
-        for(User user:this.users){
-            userService.add(user);
-        }
+        MockUserDao mockUserDao=new MockUserDao(users);
 
         MockMailSender mockMailSender=new MockMailSender();
-        userService=new UserServiceImpl(userDao,mockMailSender);
+        userService=new UserServiceImpl(mockUserDao,mockMailSender);
 
         userService.upgradeLevels();
 
-        checkUpdateLevel(users.get(0),false);
-        checkUpdateLevel(users.get(1),true);
-        checkUpdateLevel(users.get(2),true);
-        checkUpdateLevel(users.get(3),false);
+        List<User> updatedUser = mockUserDao.getUpdated();
+        Assertions.assertThat(updatedUser.size()).isEqualTo(2);
+        checkIdAndLevel(updatedUser.get(0),"2",Level.SILVER);
+        checkIdAndLevel(updatedUser.get(1),"3",Level.GOLD);
 
         List<String> request=mockMailSender.getRequests();
         Assertions.assertThat(request.size()).isEqualTo(2);
@@ -133,6 +129,35 @@ public class UserServiceTest {
         checkUpdateLevel(users.get(1),false);
     }
 
+    @Test
+    @DisplayName("Mockito Test")
+    void 목_오브젝트_테스트(){
+        UserDao userDao= Mockito.mock(UserDao.class);
+        Mockito.when(userDao.getAll()).thenReturn(this.users);
+
+        MailSender mailSender=Mockito.mock(MailSender.class);
+
+        UserServiceImpl userService=new UserServiceImpl(userDao,mailSender);
+        userService.upgradeLevels();
+
+        Mockito.verify(userDao,Mockito.times(2)).update(Mockito.any(User.class));
+        Mockito.verify(userDao,Mockito.times(1)).getAll();
+        Mockito.verify(userDao).update(users.get(1));
+        Assertions.assertThat(users.get(1).getLevel()).isEqualTo(Level.SILVER);
+        Mockito.verify(userDao).update(users.get(2));
+        Assertions.assertThat(users.get(2).getLevel()).isEqualTo(Level.GOLD);
+
+
+        ArgumentCaptor<SimpleMailMessage> mailMessageArg=ArgumentCaptor.forClass(SimpleMailMessage.class);
+        //send 가 2번 발생. send 의 파라미터가 SimpleMailMessage임 이걸 ArgumentCaptor에 capture 해두는 것
+        Mockito.verify(mailSender,Mockito.times(2)).send(mailMessageArg.capture());
+        List<SimpleMailMessage> request=mailMessageArg.getAllValues();
+
+        Assertions.assertThat(request.size()).isEqualTo(2);
+        Assertions.assertThat(request.get(0).getTo()[0]).isEqualTo(users.get(1).getEmail());
+        Assertions.assertThat(request.get(1).getTo()[0]).isEqualTo(users.get(2).getEmail());
+    }
+
     private User createUser(String id, String name, String password, Level level, int login, int recommend,String email,
                             LocalDateTime createdAt,LocalDateTime lastUpgraded){
         return User.createUser()
@@ -146,6 +171,11 @@ public class UserServiceTest {
                 .createdAt(createdAt)
                 .lastUpgraded(lastUpgraded)
                 .build();
+    }
+
+    private void checkIdAndLevel(User user,String id,Level expectedValue){
+        Assertions.assertThat(user.getId()).isEqualTo(id);
+        Assertions.assertThat(user.getLevel()).isEqualTo(expectedValue);
     }
 
     private void checkLevel(User user,Level level){
@@ -201,5 +231,42 @@ public class UserServiceTest {
 
     static class TestUserServiceException extends RuntimeException{
 
+    }
+
+    @RequiredArgsConstructor
+    @Getter
+    static class MockUserDao implements UserDao{
+        private final List<User> users;
+        private List<User> updated=new ArrayList<>();
+
+        @Override
+        public void add(User user) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Optional<User> get(String id) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public List<User> getAll() {
+            return this.users;
+        }
+
+        @Override
+        public void deleteAll() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int getCount() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void update(User user) {
+            updated.add(user);
+        }
     }
 }
