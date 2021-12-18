@@ -20,8 +20,10 @@ import study.aop.configuration.AppConfig;
 import study.aop.domain.Level;
 import study.aop.dao.UserDao;
 import study.aop.domain.User;
+import study.aop.proxy.handler.TransactionHandler;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Proxy;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -78,7 +80,11 @@ public class UserServiceTest {
         MockMailSender mockMailSender=new MockMailSender();
         userService=new UserServiceImpl(mockUserDao,mockMailSender);
 
-        userService.upgradeLevels();
+        UserService dynamicProxy=(UserService) Proxy.newProxyInstance(getClass().getClassLoader(),
+                new Class[]{UserService.class},new TransactionHandler(userService,
+                        transactionManager,"upgradeLevels"));
+
+        dynamicProxy.upgradeLevels();
 
         List<User> updatedUser = mockUserDao.getUpdated();
         Assertions.assertThat(updatedUser.size()).isEqualTo(2);

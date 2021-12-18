@@ -1,6 +1,7 @@
 package study.aop.configuration;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -10,6 +11,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.mail.MailSender;
 import org.springframework.transaction.PlatformTransactionManager;
+import study.aop.configuration.bean.MessageFactoryBean;
 import study.aop.service.DummyMailSender;
 import study.aop.dao.UserDao;
 import study.aop.dao.UserDaoImpl;
@@ -64,6 +66,11 @@ public class AppConfig {
     @Bean
     public UserService userServiceImpl(){
         return new UserServiceImpl(userDao(),mailSender());
+    }
+
+    @Bean
+    public FactoryBean message(){
+        return new MessageFactoryBean("Factory");
     }
 
 }
