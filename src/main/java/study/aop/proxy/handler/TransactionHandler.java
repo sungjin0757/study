@@ -18,7 +18,7 @@ public class TransactionHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if(method.getName().equals(pattern))
+        if(method.getName().startsWith(pattern))
             return invokeWithTransaction(method,args);
         return method.invoke(target,args);
     }

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mail.MailException;
@@ -17,6 +18,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.PlatformTransactionManager;
 import study.aop.configuration.AppConfig;
+import study.aop.configuration.bean.TransactionFactoryBean;
 import study.aop.domain.Level;
 import study.aop.dao.UserDao;
 import study.aop.domain.User;
@@ -34,8 +36,10 @@ public class UserServiceTest {
     @Autowired
     UserService userService;
 
+//    @Autowired
+//    ProxyFactoryBean proxyFactoryBean;
     @Autowired
-    UserServiceImpl userServiceImpl;
+    UserService testUserService;
 
     @Autowired
     UserDao userDao;
@@ -51,6 +55,9 @@ public class UserServiceTest {
 
     List<User> users;
 
+//    @Autowired
+//    TransactionFactoryBean transactionFactoryBean;
+
     @BeforeEach
     void setUp(){
         users= Arrays.asList(
@@ -65,11 +72,6 @@ public class UserServiceTest {
         );
     }
 
-    @Test
-    @DisplayName("Bean DI Test")
-    void 빈_주입_테스트(){
-        Assertions.assertThat(this.userService).isNotEqualTo(null);
-    }
 
     @Test
     @DisplayName("Business Logic Test")
@@ -78,10 +80,10 @@ public class UserServiceTest {
         MockUserDao mockUserDao=new MockUserDao(users);
 
         MockMailSender mockMailSender=new MockMailSender();
-        userService=new UserServiceImpl(mockUserDao,mockMailSender);
+        UserServiceImpl userServiceImpl=new UserServiceImpl(mockUserDao,mockMailSender);
 
         UserService dynamicProxy=(UserService) Proxy.newProxyInstance(getClass().getClassLoader(),
-                new Class[]{UserService.class},new TransactionHandler(userService,
+                new Class[]{UserService.class},new TransactionHandler(userServiceImpl,
                         transactionManager,"upgradeLevels"));
 
         dynamicProxy.upgradeLevels();
@@ -116,10 +118,18 @@ public class UserServiceTest {
 
     @Test
     @DisplayName("Rollback Test")
+    @DirtiesContext
     void 롤백_태스트() throws Exception{
-        TestUserService testUserService=new TestUserService(userDao,mailSender,users.get(2).getId());
+//        TestUserService testUserService=new TestUserService(userDao,mailSender,users.get(2).getId());
 
-        UserServiceTx userServiceTx=new UserServiceTx(testUserService,transactionManager);
+//        UserServiceTx userServiceTx=new UserServiceTx(testUserService,transactionManager);
+//        transactionFactoryBean=new TransactionFactoryBean(testUserService,transactionManager,"upgradeLevels",
+//                UserService.class);
+//        UserService userServiceTx=(UserService) transactionFactoryBean.getObject();
+//        proxyFactoryBean.setTarget(testUserService);
+//
+//        UserService userServiceTx=(UserService) proxyFactoryBean.getObject();
+
         userDao.deleteAll();
 
         for(User user:users){
@@ -127,8 +137,8 @@ public class UserServiceTest {
         }
 
         try{
-           userServiceTx.upgradeLevels();
-        }catch(TestUserServiceException e){
+           testUserService.upgradeLevels();
+        }catch(TestUserServiceImpl.TestUserServiceException e){
 
         }
 
@@ -164,7 +174,9 @@ public class UserServiceTest {
         Assertions.assertThat(request.get(1).getTo()[0]).isEqualTo(users.get(2).getEmail());
     }
 
-    private User createUser(String id, String name, String password, Level level, int login, int recommend,String email,
+
+    public static User createUser(String id, String name, String password,
+                                   Level level, int login, int recommend,String email,
                             LocalDateTime createdAt,LocalDateTime lastUpgraded){
         return User.createUser()
                 .id(id)
@@ -203,23 +215,6 @@ public class UserServiceTest {
         }
     }
 
-    static class TestUserService extends UserServiceImpl {
-        private final String id;
-
-        public TestUserService(UserDao userDao, MailSender mailSender,
-                               String id) {
-            super(userDao,mailSender);
-            this.id = id;
-        }
-
-        @Override
-        protected void upgradeLevel(User user) {
-            if(user.getId().equals(this.id))
-                throw new TestUserServiceException();
-            super.upgradeLevel(user);
-        }
-    }
-
     @Getter
     static class MockMailSender implements MailSender{
         private List<String> requests=new ArrayList<>();
@@ -233,10 +228,6 @@ public class UserServiceTest {
         public void send(SimpleMailMessage... simpleMessages) throws MailException {
 
         }
-    }
-
-    static class TestUserServiceException extends RuntimeException{
-
     }
 
     @RequiredArgsConstructor

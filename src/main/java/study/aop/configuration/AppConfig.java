@@ -1,6 +1,10 @@
 package study.aop.configuration;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.aop.support.NameMatchMethodPointcut;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,12 +16,12 @@ import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.mail.MailSender;
 import org.springframework.transaction.PlatformTransactionManager;
 import study.aop.configuration.bean.MessageFactoryBean;
-import study.aop.service.DummyMailSender;
+import study.aop.configuration.bean.TransactionFactoryBean;
+import study.aop.proxy.advice.TransactionAdvice;
+import study.aop.proxy.pointcout.NameMatchClassMethodPointcut;
+import study.aop.service.*;
 import study.aop.dao.UserDao;
 import study.aop.dao.UserDaoImpl;
-import study.aop.service.UserService;
-import study.aop.service.UserServiceImpl;
-import study.aop.service.UserServiceTx;
 
 import javax.sql.DataSource;
 
@@ -59,18 +63,61 @@ public class AppConfig {
     }
 
     @Bean
-    public UserService userService(){
-        return new UserServiceTx(userServiceImpl(),transactionManager());
+    public TransactionAdvice transactionAdvice(){
+        return new TransactionAdvice(transactionManager());
+    }
+
+//    @Bean
+//    public NameMatchMethodPointcut transactionPointcut(){
+//        NameMatchMethodPointcut pointcut=new NameMatchMethodPointcut();
+//        pointcut.setMappedNames("upgrade*");
+//        return pointcut;
+//    }
+
+    @Bean
+    public NameMatchClassMethodPointcut transactionPointcut(){
+        NameMatchClassMethodPointcut pointcut=new NameMatchClassMethodPointcut();
+        pointcut.setMappedClassName("*ServiceImpl");
+        pointcut.setMappedNames("upgrade*");
+        return pointcut;
     }
 
     @Bean
-    public UserService userServiceImpl(){
+    public DefaultPointcutAdvisor transactionAdvisor(){
+        return new DefaultPointcutAdvisor(transactionPointcut(),transactionAdvice());
+    }
+
+    @Bean
+    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator(){
+        return new DefaultAdvisorAutoProxyCreator();
+    }
+
+//    @Bean
+//    public TransactionFactoryBean userService(){
+//        return new TransactionFactoryBean(userServiceImpl(),transactionManager()
+//        ,"upgradeLevels()",UserService.class);
+//    }
+
+//    @Bean
+//    public ProxyFactoryBean userService(){
+//        ProxyFactoryBean factoryBean=new ProxyFactoryBean();
+//        factoryBean.setTarget(userServiceImpl());
+//        factoryBean.setInterceptorNames("transactionAdvisor");
+//        return factoryBean;
+//    }
+
+    @Bean
+    public UserService userService(){
         return new UserServiceImpl(userDao(),mailSender());
     }
 
-    @Bean
-    public FactoryBean message(){
-        return new MessageFactoryBean("Factory");
-    }
+//    @Bean
+//    public FactoryBean message(){
+//        return new MessageFactoryBean("Factory");
+//    }
 
+    @Bean
+    public UserService testUserService(){
+        return new TestUserServiceImpl(userDao(),mailSender(),"3");
+    }
 }
