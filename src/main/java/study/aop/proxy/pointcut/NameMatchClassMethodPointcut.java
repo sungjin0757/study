@@ -1,4 +1,4 @@
-package study.aop.proxy.pointcout;
+package study.aop.proxy.pointcut;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.aop.ClassFilter;

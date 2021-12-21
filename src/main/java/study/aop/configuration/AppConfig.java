@@ -1,11 +1,9 @@
 package study.aop.configuration;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
-import org.springframework.aop.support.NameMatchMethodPointcut;
-import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -15,10 +13,8 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.mail.MailSender;
 import org.springframework.transaction.PlatformTransactionManager;
-import study.aop.configuration.bean.MessageFactoryBean;
-import study.aop.configuration.bean.TransactionFactoryBean;
 import study.aop.proxy.advice.TransactionAdvice;
-import study.aop.proxy.pointcout.NameMatchClassMethodPointcut;
+import study.aop.proxy.pointcut.NameMatchClassMethodPointcut;
 import study.aop.service.*;
 import study.aop.dao.UserDao;
 import study.aop.dao.UserDaoImpl;
@@ -74,11 +70,18 @@ public class AppConfig {
 //        return pointcut;
 //    }
 
+//    @Bean
+//    public NameMatchClassMethodPointcut transactionPointcut(){
+//        NameMatchClassMethodPointcut pointcut=new NameMatchClassMethodPointcut();
+//        pointcut.setMappedClassName("*ServiceImpl");
+//        pointcut.setMappedNames("upgrade*");
+//        return pointcut;
+//    }
+
     @Bean
-    public NameMatchClassMethodPointcut transactionPointcut(){
-        NameMatchClassMethodPointcut pointcut=new NameMatchClassMethodPointcut();
-        pointcut.setMappedClassName("*ServiceImpl");
-        pointcut.setMappedNames("upgrade*");
+    public AspectJExpressionPointcut transactionPointcut(){
+        AspectJExpressionPointcut pointcut=new AspectJExpressionPointcut();
+        pointcut.setExpression("execution(* *..service.*ServiceImpl.upgrade*(..))");
         return pointcut;
     }
 
