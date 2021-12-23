@@ -17,6 +17,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
 import study.aop.configuration.AppConfig;
 import study.aop.configuration.bean.TransactionFactoryBean;
 import study.aop.domain.Level;
@@ -139,7 +140,6 @@ public class UserServiceTest {
         try{
            testUserService.upgradeLevels();
         }catch(TestUserServiceImpl.TestUserServiceException e){
-
         }
 
         checkUpdateLevel(users.get(1),false);

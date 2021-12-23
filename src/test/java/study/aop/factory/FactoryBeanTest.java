@@ -11,19 +11,19 @@ import study.aop.configuration.AppConfig;
 import study.aop.configuration.bean.Message;
 import study.aop.configuration.bean.MessageFactoryBean;
 
-@SpringBootTest
-@ContextConfiguration(classes = AppConfig.class)
-public class FactoryBeanTest {
-    @Autowired
-    Message message;
-
-    @Autowired
-    MessageFactoryBean messageFactoryBean;
-
-    @Test
-    @DisplayName("Factory Bean Test")
-    void 팩토리_빈_테스트(){
-        Assertions.assertThat(message.getText()).isEqualTo("Factory");
-        Assertions.assertThat(messageFactoryBean.getText()).isEqualTo("Factory");
-    }
-}
+//@SpringBootTest
+//@ContextConfiguration(classes = AppConfig.class)
+//public class FactoryBeanTest {
+//    @Autowired
+//    Message message;
+//
+//    @Autowired
+//    MessageFactoryBean messageFactoryBean;
+//
+//    @Test
+//    @DisplayName("Factory Bean Test")
+//    void 팩토리_빈_테스트(){
+//        Assertions.assertThat(message.getText()).isEqualTo("Factory");
+//        Assertions.assertThat(messageFactoryBean.getText()).isEqualTo("Factory");
+//    }
+//}

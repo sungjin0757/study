@@ -24,16 +24,16 @@ import java.lang.reflect.Proxy;
 @Slf4j
 public class DynamicProxyTest {
 
-    @Test
-    @DisplayName("Dynamic Proxy Test - UpperClass")
-    void 다이나믹_프록시_테스트_대문자(){
-
-        Hello dynamicProxy= (Hello) Proxy.newProxyInstance(getClass().getClassLoader(),
-                new Class[]{Hello.class}, new UpperClassHandler(new HelloTarget()));
-
-        Assertions.assertThat(dynamicProxy.welcome("h")).isEqualTo("h Welcome".toUpperCase());
-        Assertions.assertThat(dynamicProxy.goodBye("h")).isEqualTo("h Good Bye".toUpperCase());
-    }
+//    @Test
+//    @DisplayName("Dynamic Proxy Test - UpperClass")
+//    void 다이나믹_프록시_테스트_대문자(){
+//
+//        Hello dynamicProxy= (Hello) Proxy.newProxyInstance(getClass().getClassLoader(),
+//                new Class[]{Hello.class}, new UpperClassHandler(new HelloTarget()));
+//
+//        Assertions.assertThat(dynamicProxy.welcome("h")).isEqualTo("h Welcome".toUpperCase());
+//        Assertions.assertThat(dynamicProxy.goodBye("h")).isEqualTo("h Good Bye".toUpperCase());
+//    }
 
     @Test
     @DisplayName("Dynamic Proxt Test - Spring Ver.")

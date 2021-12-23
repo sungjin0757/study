@@ -12,9 +12,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.mail.MailSender;
+import org.springframework.scheduling.config.AnnotationDrivenBeanDefinitionParser;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.*;
 import study.aop.proxy.advice.TransactionAdvice;
 import study.aop.proxy.pointcut.NameMatchClassMethodPointcut;
@@ -29,6 +32,7 @@ import java.util.Properties;
 
 @Configuration
 @RequiredArgsConstructor
+@EnableTransactionManagement
 public class AppConfig {
 
     private final Environment env;
@@ -46,6 +50,7 @@ public class AppConfig {
 
     @Bean
     public PlatformTransactionManager transactionManager(){
+
         return new DataSourceTransactionManager(dataSource());
     }
 
@@ -97,22 +102,22 @@ public class AppConfig {
 //        return pointcut;
 //    }
 
-    @Bean
-    public AspectJExpressionPointcut transactionPointcut(){
-        AspectJExpressionPointcut pointcut=new AspectJExpressionPointcut();
-        pointcut.setExpression("bean(*Service)");
-        return pointcut;
-    }
-
-    @Bean
-    public DefaultPointcutAdvisor transactionAdvisor(){
-        return new DefaultPointcutAdvisor(transactionPointcut(),transactionAdvice());
-    }
-
-    @Bean
-    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator(){
-        return new DefaultAdvisorAutoProxyCreator();
-    }
+//    @Bean
+//    public AspectJExpressionPointcut transactionPointcut(){
+//        AspectJExpressionPointcut pointcut=new AspectJExpressionPointcut();
+//        pointcut.setExpression("bean(*Service)");
+//        return pointcut;
+//    }
+//
+//    @Bean
+//    public DefaultPointcutAdvisor transactionAdvisor(){
+//        return new DefaultPointcutAdvisor(transactionPointcut(),transactionAdvice());
+//    }
+//
+//    @Bean
+//    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator(){
+//        return new DefaultAdvisorAutoProxyCreator();
+//    }
 
 //    @Bean
 //    public TransactionFactoryBean userService(){
@@ -142,4 +147,5 @@ public class AppConfig {
     public UserService testUserService(){
         return new TestUserServiceImpl(userDao(),mailSender(),"3");
     }
+
 }
