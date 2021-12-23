@@ -13,6 +13,7 @@ import study.aop.dao.UserDao;
 import study.aop.domain.Level;
 import study.aop.proxy.pointcut.Bean;
 import study.aop.proxy.pointcut.Target;
+import study.aop.service.TestUserServiceImpl;
 import study.aop.service.UserService;
 import study.aop.service.UserServiceImpl;
 import study.aop.service.UserServiceTest;
@@ -27,6 +28,9 @@ public class LearningTest {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    UserService testUserService;
 
     @Autowired
     UserDao userDao;
@@ -89,6 +93,12 @@ public class LearningTest {
     @DisplayName("PointCut Expression Test - Extended")
     void 포인트컷_표현식_테스트_확장() throws Exception{
         methodMatch("execution(* *(..))",true,true,true,true,true,true);
+    }
+
+    @Test
+    @DisplayName("Transaction - ReadOnlyTest")
+    void 트랜잭션_리드온리_테스트(){
+        testUserService.getAll();
     }
 
     private void pointcutMatch(String exp, Boolean expected,Class<?> clazz,String methodName, Class<?>... args)

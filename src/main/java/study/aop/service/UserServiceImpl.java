@@ -28,6 +28,7 @@ public class UserServiceImpl implements UserService {
     public static final int LOG_COUNT_FOR_SILVER=50;
     public static final int REC_COUNT_FOR_GOLD=30;
 
+
     /**
      *
      * Transaction이 없는 상태
@@ -94,6 +95,33 @@ public class UserServiceImpl implements UserService {
         user.upgradeLevel();
         userDao.update(user);
         sendUpgradeMail(user);
+    }
+
+    @Override
+    public User get(String id) {
+        return userDao.get(id).orElseThrow(()->{
+            throw new RuntimeException();
+        });
+    }
+
+    @Override
+    public List<User> getAll() {
+        return userDao.getAll();
+    }
+
+    @Override
+    public int getCount() {
+        return userDao.getCount();
+    }
+
+    @Override
+    public void deleteAll() {
+        userDao.deleteAll();
+    }
+
+    @Override
+    public void update(User user) {
+        userDao.update(user);
     }
 
     /**

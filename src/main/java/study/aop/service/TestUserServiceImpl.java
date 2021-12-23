@@ -1,8 +1,11 @@
 package study.aop.service;
 
 import org.springframework.mail.MailSender;
+import org.springframework.transaction.annotation.Transactional;
 import study.aop.dao.UserDao;
 import study.aop.domain.User;
+
+import java.util.List;
 
 public class TestUserServiceImpl extends UserServiceImpl{
     private final String id;
@@ -21,5 +24,13 @@ public class TestUserServiceImpl extends UserServiceImpl{
     }
     static class TestUserServiceException extends RuntimeException{
 
+    }
+
+    @Override
+    public List<User> getAll() {
+        for(User user:super.getAll()){
+            super.update(user);
+        }
+        return null;
     }
 }
