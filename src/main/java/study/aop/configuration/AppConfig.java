@@ -50,7 +50,6 @@ public class AppConfig {
 
     @Bean
     public PlatformTransactionManager transactionManager(){
-
         return new DataSourceTransactionManager(dataSource());
     }
 
@@ -74,19 +73,20 @@ public class AppConfig {
 //        return new TransactionAdvice(transactionManager());
 //    }
 
-    @Bean
-    public TransactionInterceptor transactionAdvice(){
-        TransactionInterceptor transactionInterceptor=new TransactionInterceptor();
+//    @Bean
+//    public TransactionInterceptor transactionAdvice(){
+//        TransactionInterceptor transactionInterceptor=new TransactionInterceptor();
+//
+//        Properties properties=new Properties();
+//        properties.put("get*", "PROPAGATION_REQUIRED,readOnly");
+//        properties.put("*","PROPAGATION_REQUIRED");
+//
+//        transactionInterceptor.setTransactionManager(transactionManager());
+//        transactionInterceptor.setTransactionAttributes(properties);
+//
+//        return transactionInterceptor;
+//    }
 
-        Properties properties=new Properties();
-        properties.put("get*", "PROPAGATION_REQUIRED,readOnly");
-        properties.put("*","PROPAGATION_REQUIRED");
-
-        transactionInterceptor.setTransactionManager(transactionManager());
-        transactionInterceptor.setTransactionAttributes(properties);
-
-        return transactionInterceptor;
-    }
 //    @Bean
 //    public NameMatchMethodPointcut transactionPointcut(){
 //        NameMatchMethodPointcut pointcut=new NameMatchMethodPointcut();
