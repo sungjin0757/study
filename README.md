@@ -530,3 +530,217 @@ public UserService userService(){
 <img width="627" alt="스크린샷 2022-01-16 오후 10 24 32" src="https://user-images.githubusercontent.com/56334761/149661818-42ed498a-da6e-4c09-ad2f-276427b2e44c.png">
 
 이런 느낌으로 말이죠..
+
+#### 🔍 Dynamic Proxy
+
+프록시가 어떤 이유로 만들어 졌는지 또한 프록시가 어떤 방식으로 만들어 지는 지를 지금까지 알아보았습니다.
+
+그 이유는 
+- **첫번째로는,** 프록시를 구성하고 난 다음 타깃에게 위임하는 코드를 작성하기 번거롭다는 점입니다.
+  
+    왜냐하면, 클라이언트는 결국에는 프록시 객체를 이용하여 타깃에게 접근이 가능할 터인데, 타깃의 메소드가 많아질수록 위임해줘야하는 코드의 양은 길어질 것이며,
+    기능이 추가거나 수정될 때 또한 함께 고쳐줘야한다는 문제점이 있습니다.
+- **두번째로는,** 부가기능 코드 작성이 중복될 경우가 많다는 점입니다. 왜냐하면, 모든 메소드마다 똑같이 적용시켜야 할 지도 모르기 때문입니다.
+
+이런 문제점을 해결할 수 있는것이 바로 **Dynamic Proxy**입니다.
+
+Dynamic Proxy를 구성하기 전에 먼저 **리플렉션**에 대해서 알아봅시다.
+
+리플렉션 API를 활용해 메소드에 대한 정의를 담은 Method 인터페이스를 활용해 메소드를 호출하는 방법을 알아봅시다.
+
+**ArrayList**의 **size**라는 메소드를 추출한 뒤 **invoke**를 통해 추출해낸 메소드를 실행시켜 봅시다.
+
+```java
+@Test
+    @DisplayName("Reflect - Method Test")
+    void 리플렉트_메소드_추출_테스트() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method sizeMethod= ArrayList.class.getMethod("size");
+
+        List<Integer> testList=new ArrayList<>();
+        testList.add(1);
+        testList.add(2);
+        testList.add(3);
+        
+        Assertions.assertThat(testList.size()).isEqualTo(3);
+        Assertions.assertThat(testList.size()).isEqualTo(sizeMethod.invoke(testList));
+        Assertions.assertThat(sizeMethod.invoke(testList)).isEqualTo(3);
+    }
+```
+
+**테스트 결과**
+
+<img width="50%" alt="스크린샷 2022-01-19 오후 7 17 59" src="https://user-images.githubusercontent.com/56334761/150111020-ae021db9-597d-4b2d-aa3e-abbd3326b006.png">
+
+보시는 것과 같이 Reflect를 활용해서 메소드에 대한 정보를 추출해낼 수 있었고, 이를 이용하여 지정한 오브젝트에 대하여 메소드를 실행시킬 수 있다는 것을 
+확인하였습니다.
+
+Dynamic Proxy의 동작 방법부터 살펴봅시다.
+
+<img width="1095" alt="스크린샷 2022-01-19 오후 7 36 48" src="https://user-images.githubusercontent.com/56334761/150113847-ff0dc65e-cdc3-46be-9276-84563a949d15.png">
+
+**Dynamic Proxy**란? 먼저 프록시 팩토리에 의해 런타임 시 다이내믹하게 만들어지는 프록시 입니다. 프록시 팩토리에게 `Interface`의 정보만
+ 넘겨주면 프록시를 적용한 오브젝트를 자동으로 만들어주게 됩니다.
+
+이 과정에서, 추가시키고자 하는 부가기능을 `Invocation Handler`에 넣어주기만 하면 됩니다.
+
+**InvocationHandler.java**
+```java
+public interface InvocationHandler {
+
+    public Object invoke(Object proxy, Method method, Object[] args)
+        throws Throwable;
+}
+
+```
+
+`InvocationHancler` 인터페이스입니다. `invoke`라는 메소드는 위에서 진행해보았던 리플렉션 API의 Method 인터페이스와 타깃 메소드의 파라미터를 파라미터로 전달 받습니다.
+
+즉, 클라리언트의 모든 요청 메소드는 `Dynamic Proxy`를 통하여 `InvocationHandler`의 `Invoke`메소드의 파라미터로 전달되며 
+타깃 메소드에 부가기능을 적용시켜 그 결과를 리턴해줍니다.
+
+이는 앞에서 봤던 두번째 문제점인 중복된 코드를 해결할 수 있습니다. `Invoke`라는 메소드 하나로 타깃 오브젝트의 메소드에 부가기능을 적용시켜 실행할 수 있기 때문입니다.
+
+이제는, Transaction 부가기능을 Dynamic Proxy를 통하여 코드로 작성해봅시다.
+
+**TransactionHandler.java**
+```java
+@RequiredArgsConstructor
+public class TransactionHandler implements InvocationHandler {
+
+    private final Object target;
+    private final PlatformTransactionManager transactionManager;
+    private final String pattern;
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if(method.getName().startsWith(pattern))
+            return invokeWithTransaction(method,args);
+        return method.invoke(target,args);
+    }
+
+    private Object invokeWithTransaction(Method method,Object[] args) throws Throwable{
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        try{
+            Object invoke = method.invoke(target, args);
+            transactionManager.commit(status);
+            return invoke;
+        }catch(InvocationTargetException e){
+            transactionManager.rollback(status);
+            throw e.getTargetException();
+        }
+    }
+}
+
+```
+
+이 코드에서는
+1. Target Object
+2. Transaction Manager
+3. Method Pattern (부가기능을 지정된 메소드에만 적용시키기 위해)
+
+들을 DI 시켜주는 부분을 유의하면 됩니다.
+
+**Dynamic Proxy - Client에서 직접 생성**
+```java
+TransactionHandler txHandler=new TranscationHandler();
+
+UserService userService=(UserService)Proxy.newProxyInstance(
+        getClass().getClassLoader(),new Class[]{UserService.class},txHndler
+        );
+```
+
+이렇게 Dynamic Proxy를 직접 생성해줄 수도 있습니다.
+
+지금부터는, `TransactionHandler`와 `Dynamic Proxy`를 스프링 DI를 통해 사용할 수 있도록 만들면 됩니다.
+
+하지만, `Dynamic Proxy`는 런타임 시에 동적으로 만들어지기 때문에 일반적인 스프링 Bean으로 등록할 수 없다는 것입니다.
+
+#### 🔍 Factory Bean
+스프링은 생성자를 통해 오브젝트를 만드는 방법 외에도 다양한 방법이 있습니다. 그 중 하나가 이 Factory Bean입니다.
+
+Factory Bean 은 스프링을 대신해서 오브젝트의 생성로직을 담당하도록 만들어진 특별한 빈을 말합니다.
+
+```java
+public interface FactoryBean<T> {
+    String OBJECT_TYPE_ATTRIBUTE = "factoryBeanObjectType";
+
+    @Nullable
+    T getObject() throws Exception;
+
+    @Nullable
+    Class<?> getObjectType();
+
+    default boolean isSingleton() {
+        return true;
+    }
+}
+```
+이 인터페이스를 구현하기만 하면 됩니다.
+- getObject() 메소드 내부에서 Dynamic Proxy를 생성한 후 반환시켜줍니다.
+
+결론적으로 이 인터페이스를 구현한 클래스를 스프링의 빈으로 등록해주면 되는 것입니다.
+
+추가로, 스프링은 `FactoryBean`인터페이스를 구현한 클래스가 빈의 클래스로 지정되면, 팩토리 빈 클래스의 getObject()를 통하여 오브젝트를 가져오고,
+ 이를 빈 오브젝트로 사용합니다. 빈의 클래스로 등록된 팩토리빈은 빈 오브젝트를 생성하는 과정에서만 사용됩니다.
+
+`FactoryBean` 인터페이스를 구현한 클래스를 스프링 빈으로 만들어두면 getObject() 라는 메소드가 생성해주는 오브젝트가 실제 빈의
+오브젝트로 대체 된다고 보시면 될 것 같습니다.
+
+**코드를 통해 살펴봅시다.**
+
+**TransactionFactoryBean.java**
+```java
+@RequiredArgsConstructor
+@Getter
+public class TransactionFactoryBean implements FactoryBean<Object> {
+
+    private final Object target;
+    private final PlatformTransactionManager transactionManager;
+    private final String pattern;
+    private final Class<?> interfaces;
+
+    @Override
+    public Object getObject() throws Exception {
+        return Proxy.newProxyInstance(getClass().getClassLoader(),new Class[]{interfaces},new TransactionHandler(target,
+                transactionManager,pattern));
+    }
+
+    @Override
+    public Class<?> getObjectType() {
+        return interfaces;
+    }
+
+    @Override
+    public boolean isSingleton() {
+        return false;
+    }
+}
+```
+
+**AppConfig.java - 스프링 빈 등록**
+```java
+    @Bean
+    public TransactionFactoryBean userService(){
+        return new TransactionFactoryBean(userServiceImpl(),transactionManager()
+        ,"upgradeLevels()",UserService.class);
+    }
+```
+
+**지금 까지, `Dynamic Proxy`와 `Factory Bean`을 적용해 보았습니다. 장점과 단점 또한 알아봅시다.**
+
+**장점**
+- 재사용이 가능합니다.
+  - `Factory Bean`은 다양한 클래스에 적용가능합니다. 또한 하나 이상의 빈을 등록해도 상관 없습니다.
+- 인터페이스를 구현하는 프록시 클래스를 일일이 만들어야 한다는 번거로움을 해결해줍니다.
+- 부가적인 기능이 여러 메소드에 반복적으로 나타나게 되는 것을 해결해줍니다.
+
+**단점**
+- 한 번에 여러개의 클래스에 공통적인 부가기능을 부여하는 것은 불가능합니다. (`Factory Bean`의 설정의 중복을 막을 수 없다는 것을 뜻합니다.)
+- 하나의 타깃에 여러가지 부가기능을 부여할수록 설정 파일이 복잡해집니다.
+  - 예를 들어, Transaction 기능 외에 접근 제한 기능까지 추가하고 싶고 이 기능들을 공통적으로 사용하는 타깃이 수 백개라면 그 갯수만큼 설정 파일에서 
+  추가로 설정해 줘야 되기 때문입니다.
+- `TransactionHandler` 오브젝트는 `FactoryBean`의 개수만큼 만들어 집니다. 위의 코드에서 보셨다 시피 타겟이 달라질 때마다,
+공통 기능임에도 불가하고 새로 `TransactionHandler`를 만들어 줘야 했습니다.
+
+다음부터는, 이 단점들을 해결해나가 봅시다!
+

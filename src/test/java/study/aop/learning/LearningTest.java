@@ -18,8 +18,11 @@ import study.aop.service.UserService;
 import study.aop.service.UserServiceImpl;
 import study.aop.service.UserServiceTest;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @SpringBootTest
 @Slf4j
@@ -99,6 +102,21 @@ public class LearningTest {
     @DisplayName("Transaction - ReadOnlyTest")
     void 트랜잭션_리드온리_테스트(){
         testUserService.getAll();
+    }
+
+    @Test
+    @DisplayName("Reflect - Method Test")
+    void 리플렉트_메소드_추출_테스트() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method sizeMethod= ArrayList.class.getMethod("size");
+
+        List<Integer> testList=new ArrayList<>();
+        testList.add(1);
+        testList.add(2);
+        testList.add(3);
+
+        Assertions.assertThat(testList.size()).isEqualTo(3);
+        Assertions.assertThat(testList.size()).isEqualTo(sizeMethod.invoke(testList));
+        Assertions.assertThat(sizeMethod.invoke(testList)).isEqualTo(3);
     }
 
     private void pointcutMatch(String exp, Boolean expected,Class<?> clazz,String methodName, Class<?>... args)
