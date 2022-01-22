@@ -744,3 +744,175 @@ public class TransactionFactoryBean implements FactoryBean<Object> {
 
 다음부터는, 이 단점들을 해결해나가 봅시다!
 
+***
+
+### 🚀 Spring Proxy Factory Bean
+
+스프링은 일관된 방법으로 프록시를 만들 수 있게 도와주는 추상 레이어를 제공합니다. 스프링은 프록시 오브젝트를 생성해주는 기술을
+추상화한 프록시 팩토리 빈을 제공하여 줍니다.
+
+스프링의 `ProxyFactoryBean`은 프록시를 생성해서 빈 오브젝트로 등록하게 해주는 팩토리 빈이며,
+순수하게 프록시를 생성하는 작업만들 담당하게 됩니다.
+
+부가기능과 같은 작업은 별도의 빈에 둘 수 있습니다.
+
+`ProxyFactoryBean`은 `InvocationHandler`가 아닌 `MethodInterceptor`를 사용합니다.
+
+둘의 가장 큰 차이 점은
+`InvocationHandler`는 target의 정보를 직접 알고 있어야 Method를 Invoke할 수 있었던 반면에,
+```java
+@Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if(method.getName().startsWith(pattern))
+            return invokeWithTransaction(method,args);
+        return method.invoke(target,args);
+    }
+```
+
+`MethodInterceptor`는 target오브젝트에 대한 정보도 `ProxyFactoryBean`에게 제공받기 때문에, 타깃에 대한 정보를 직접 몰라도 됩니다.
+디 덕분에 `MethodInterceptor`는 타깃과 상관 없이 독립적으로 만들 수 있으며, 싱긃톤 빈으로도 등록이 가능합니다.
+
+이와 같은 정보를 기반으로 코드를 작성해 봅시다
+
+**TransactionAdvice.java**
+```java
+@RequiredArgsConstructor
+public class TransactionAdvice implements MethodInterceptor {
+    private final PlatformTransactionManager transactionManager;
+
+    @Override
+    public Object invoke(MethodInvocation invocation) throws Throwable {
+        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        try{
+            Object ret = invocation.proceed();
+            transactionManager.commit(status);
+            return ret;
+        }catch(RuntimeException e){
+            transactionManager.rollback(status);
+            throw e;
+        }
+    }
+}
+
+```
+
+**AppConfig.java**
+```java
+@Configuration
+@RequiredArgsConstructor
+@EnableTransactionManagement
+public class AppConfig {
+    private final Environment env;
+
+    //Advice 부분 설명
+    @Bean
+    public TransactionAdvice transactionAdvice(){
+        return new TransactionAdvice(transactionManager());
+    }
+    
+    //Pointcut 부분 설명
+    //NameMatchMethodPointcut은 스프링 기본 제공
+    @Bean
+    public NameMatchMethodPointcut transactionPointcut(){
+        NameMatchMethodPointcut pointcut=new NameMatchMethodPointcut();
+        pointcut.setMappedNames("upgrade*");
+        return pointcut;
+    }
+
+    //Advisor = Advice + Pointcut
+    @Bean
+    public DefaultPointcutAdvisor transactionAdvisor(){
+        return new DefaultPointcutAdvisor(transactionPointcut(),transactionAdvice());
+    }
+    
+    @Bean
+    public ProxyFactoryBean userService() {
+        ProxyFactoryBean factoryBean = new ProxyFactoryBean();
+        factoryBean.setTarget(userServiceImpl());
+        factoryBean.setInterceptorNames("transactionAdvisor");
+        return factoryBean;
+    }
+    
+    ...
+}
+```
+위의 코드를 보시다 시피, 타깃에대한 정보를 직접적으로 알고 있지 않습니다. `MethodInvocation`이라는 파라미터로 타깃에 대한
+정보와 메소드에 대한 정보가 함께 넘어온다고 생각하시면 됩니다.
+
+#### 🔍 Advice 어드바이스
+**Target**이 필요 없는 순수한 부가기능을 뜻합니다.
+
+`MethodInvocation`은 메소드 정보와 타깃 오브젝트가 담겨있는 파라미터입니다.
+`MethodInvocation`은 타깃 오브젝트의 메소드를 실행할 수 있는 기능이 있기 때문에 `MethodInterceptor`는 부가기능에만
+집중을 할 수 있습니다.
+
+`MethodInvocation`은 proceed() 메소드를 실행하면 타겟 오브젝트의 메소드를 내부적으로 실행해주는 기능이 있습니다.
+
+즉, `MethodInvocation`을 구현한 클래스를 클래스간 공유 가능하게 사용가능하다는 것입니다.
+
+그냥 JDK에서의 `ProxyFactoryBean`의 단점이었던 **`TransactionHandler` 오브젝트는 `FactoryBean`의 개수만큼 만들어 집니다. 위의 코드에서 보셨다 시피 타겟이 달라질 때마다,
+공통 기능임에도 불가하고 새로 `TransactionHandler`를 만들어 줘야 했습니다.** 이 문제를 해결할 수 있게 되었습니다.
+
+또한, `MethodInterceptor`를 구현한 `TransactionAdvice`의 이름에서 알 수 있듯이 
+
+<span style="color:red; font-weight:bold;">타겟 오브젝트에 적용하는 부가기능을 담은 오브젝트를 스프링에서는 어드바이스(Advice)라고 부르게 됩니다.</span>
+
+마지막으로 다른 점이 있습니다.
+`TransactionFactoryBean`을 사용했을 때는 `Dynamic Proxy`를 만들기 위해서 인터페이스 타입을 제공받아야 했습니다.
+
+```java
+//TransactionFactoryBean
+@RequiredArgsConstructor
+@Getter
+public class TransactionFactoryBean implements FactoryBean<Object> {
+
+    private final Object target;
+    private final PlatformTransactionManager transactionManager;
+    private final String pattern;
+    private final Class<?> interfaces;   //이 부분
+
+    ...
+}
+
+```
+
+하지만, 우리가 구현한 `Advice`에서는 따로 인터페이스의 정보를 제공받지 않아도 되었습니다. 그 이유는,
+인터페이스의 정보를 제공하지 않아도 `ProxyFactoryBean`에는 인터페이스를 자동 검출하는 기능을 사용하여 타겟 오브젝트가
+구현하고 있는 인터페이스 정보를 알아내기 때문입니다.
+
+이렇게 Advice에 대해서 알아보았습니다. Advice는 타겟 오브젝트에 순수한 부가기능을 담은 오브젝트라고 아시면 됩니다.
+
+#### 🔍 Pointcut 포인트컷
+**부가기능 적용대상 메소드 선정 방법**을 뜻합니다.
+
+`InvocationHandler`를 구현한`TransactionHandler`에서는 String 값으로 Pattern을 주입 받아 부가기능이 적용될 대상 메소드를 선정 하였습니다.
+
+그렇다면 `MethodInterceptor`에서도 똑같이 pattern을 주입받아 내부 로직으로 처리하면 될까요?? 아닙니다!!
+
+`MethodInterceptor`는 여러 프록시에서 공유해서 사용할 수 있습니다. 이 말은 즉, 타겟에 대한 정보를 직접적으로 가지고 있지 않다는 뜻과 같습니다.
+때문에, 싱글톤형태인 스프링 빈으로도 등록할 수 있었던 것 입니다. 
+
+더 자세히 보자면, `InvocationHandler`방식의 문제점이었던 `InvocationHandler`를 구현한 클래스가 `FactoryBean`을 만들 때마다 새로운 오브젝트가 생성
+된다는 것이었습니다. 그 이유는 타겟마다 메소드 선정 알고리즘이나 타겟 자체가 다를 수 있기 때문에 어떤 타겟이나, 클래스에 종속되지 않기 위해서 입니다.
+
+이 문제를 기껏 훌륭히 해결해 놨는데 Pattern을 주입 받아 활용한다면 또다시 어떤 메소드나 클래스에만 종속될 수 밖에 없다는 것을
+의미합니다.
+
+이런 문제점을 해결하기 위해서, 스프링은 부가기능을 제공하는 오브젝트인 Advice와 메소드 선정 알고리즘 오브젝트인 Pointcut을 따로 나누었습니다.
+Advice와 Pointcut은 모두 주입을 받아 사용하며, 두 가지 모두 여러 프록시에서 공유가 가능하도록 만들어지기 때문에 스프링 빈으로 등록할 수 있습니다.
+
+이제, 프록시는 클라이언트로부터 요청을 받으면 먼저 Pointcut에게 적용 가능한 메소드인지 확인을 한 뒤, Advice를 호출해 주면 됩니다.
+
+결과적으로, Advice와 Pointcut의 도입으로 인해 여러 프록시가 공유하며 유연하게 사용할 수 있게 되었고, 구체적인 부가기능 방칙이나 메소드 선정 알고르짐이 바뀌게 되면
+Advice나 Pointcut만 바꿔주면 해결되게 되었습니다.
+
+`OCP : Open Closed Priciple`을 잘 지켰다고 볼 수 있습니다. 
+><a href="https://github.com/sungjin0757/spring-dependency-study"><span style="font-weight:bold;">OCP 더 자세히 보기</span></a>
+
+#### 👍 추가로, Advisor란?
+Advisor란 Advice와 Pointcut을 묶는다고 보시면 됩니다.
+
+묶는 이유는, `ProxyFactoryBean`에 여러가지 Advice와 Pointcut이 추가 될 수 있습니다.
+
+여기서, 각각의 Advice마다 메소드를 선정하는 방식이 달라질 수도 있으니 어떤 Pointcut을 적용할지 애매해질 수 있읍니다. 그렇기 때문에 Advice와 Pointcut을 하나로
+묶어서 사용합니다.
