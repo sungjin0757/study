@@ -916,3 +916,300 @@ Advisor란 Advice와 Pointcut을 묶는다고 보시면 됩니다.
 
 여기서, 각각의 Advice마다 메소드를 선정하는 방식이 달라질 수도 있으니 어떤 Pointcut을 적용할지 애매해질 수 있읍니다. 그렇기 때문에 Advice와 Pointcut을 하나로
 묶어서 사용합니다.
+
+***
+
+### 🚀 스프링 AOP
+
+지금까지 해왔던 발전 기술을 다시 한번 살펴 봅시다.
+
+1. `Service` 로직에서 `Transaction`부가기능의 분리를 위해 `DynamicProxy`와 `FactoryBean`을 도입하였습니다.
+   - 문제점
+     1. 한 번에 여러개의 클래스에 공통적인 부가기능을 부여하는 것은 불가능합니다. (`Factory Bean`의 설정의 중복을 막을 수 없다는 것을 뜻합니다.)
+     2. 하나의 타깃에 여러가지 부가기능을 부여할수록 설정 파일이 복잡해집니다.
+         - 예를 들어, Transaction 기능 외에 접근 제한 기능까지 추가하고 싶고 이 기능들을 공통적으로 사용하는 타깃이 수 백개라면 그 갯수만큼 설정 파일에서
+           추가로 설정해 줘야 되기 때문입니다.
+     3. `TransactionHandler` 오브젝트는 `FactoryBean`의 개수만큼 만들어 집니다. 위의 코드에서 보셨다 시피 타겟이 달라질 때마다,
+       공통 기능임에도 불가하고 새로 `TransactionHandler`를 만들어 줘야 했습니다.
+2. 문제점을 해결하기 위해 `SpringProxyFactoryBean`을 사용했습니다.
+   - Advice의 도입
+   - Pointcut의 도입
+   - Advisor의 도입
+
+이와 같은 과정으로 투명한 부가기능을 적용할 수 있었고, 타겟에는 비즈니스 로직만 유지한 채로 둘 수 있었습니다.
+또한, 부가기능은 한 번만 만들어 모든 타겟과 메소드에서 재사용이 가능할 수 있도록 해놨습니다.
+
+**But,** 한가지 문제점이 또 남았습니다.
+
+그것은 바로 부가기능의 적용이 필요한 타겟 오브젝트마다 거의 비슷한 내용의 `ProxyFactoryBean` 빈 설정정보를 추가해주는
+부분입니다.
+
+```java
+@Configuration
+@RequiredArgsConstructor
+@EnableTransactionManagement
+public class AppConfig {
+    private final Environment env;
+    
+    //이 부분이 계속해서 늘어나게 됩니다.
+    @Bean
+    public ProxyFactoryBean userService() {
+        ProxyFactoryBean factoryBean = new ProxyFactoryBean();
+        factoryBean.setTarget(userServiceImpl());
+        factoryBean.setInterceptorNames("transactionAdvisor");
+        return factoryBean;
+    }
+    
+    ...
+}
+```
+
+위와 같은 코드가 계속해서 늘어나게 됩니다. 물론, 단순하고 쉬운 과정이지만 만약 저러한 오브젝트가 수 백개가 넘고 이렇게 되면
+굉장히 번거로운 작업일 뿐더러 실수하기도 쉽게 됩니다.
+
+**즉, 한 번에 여러 개의 빈에 프록시를 적용해야합니다!**
+
+#### ⚙️ 빈 후처리기
+
+먼저, 빈 후처리기란 이름 그대로 스프링 빈 오브젝트로 만들어지고 난 후에, 빈 오브젝트를 다시 가공할 수 있게 해주는 것입니다.
+
+여기서 살펴볼 것은 빈이 생성된 이후에 Advisor를 이용한 자동 프록시 생성기인 `DefaultAdvisorAutoProxyCreator`를 살펴볼 수 있습니다.
+
+`DefaultAdvisorAutoProxyCreator`가 빈 후처리기로 등록되어 있으면 스프링은 빈 오브젝트를 만들 때 마다 후처리기에게 빈을 보냅니다.
+그 이후, 빈 후처리기는 빈으로 등록된 모든 Advisor내의 포인트컷을 이용해 전달받은 빈이 프록시 적용 대상인지 확인합니다.
+
+프록시 적용 대상이라면, 내장된 프록시 생성기에게 현재 빈에 대한 프록시를 만들게 하고, 만들어진 프록시에 Advisor를  연결해줍니다.
+
+이제, 프록시가 생성되면 원래 컨테이너가 전달해준 빈 오브젝트 대신 프록시 오브젝트를 컨테이너에게 돌려주게 됩니다.
+
+결론적으로 컨테이너는 프록시 오브젝트를 빈으로 등록하고 사용하게 됩니다.
+
+위의 설명을 토대로 부가기능을 부여할 빈을 선장하는 Pointcut이 연결된 Advisor를 등록하고, 빈 후처리기를 사용하게 된다면
+복잡한 설정정보를 적을 필요없이 자동으로 프록시를 생성할 수 있게 됩니다.
+
+**Pointcut의 확장**
+
+스프링 `ProxyFactoryBean`을 할 때 Pointcut에서는 메소드를 어떻게 판정할지만 생각했습니다. 근데 빈 후처리기에서 설명한 바로는
+Pointcut으로 어떤 빈이 선정 대상이 될 것인지 구별해야한다고 하고 있습니다.
+
+어떻게 된 것일 까요??
+
+Pointcut의 기능으로는 원래 메소드 선정 기능만 있는 것이 아닌 Class Filter또한 메소드로 갖고 있습니다.
+
+즉, Pointcut은 프록시를 적용할 클래스인지 판단을 하고나서, 적용대상 클래스의 경우에는 Advice를 적용할 메소드인지 확인하는 방법으로 동작합니다.
+결국은 이 두조건 모두를 만족하는 타겟에게만 부가기능이 부여되는 것입니다.
+
+앞서 알아보았던 빈 후처리기인 `DefaultAdvisorAutoCreator`에서는 클래스와 메소드 선정이 모두 가능한 Pointcut이 필요합니다.
+
+**NameMatchMethodPointcut**
+위에서 등록했었던 Pointcut을 살펴봅시다.
+
+```java
+    @Bean
+    public NameMatchMethodPointcut transactionPointcut(){
+        NameMatchMethodPointcut pointcut=new NameMatchMethodPointcut();
+        pointcut.setMappedNames("upgrade*");
+        return pointcut;
+    }
+```
+
+위와 같은 방식으로 등록을 했었습니다. 여기서 스프링이 기본 제공하는 `NameMethodPointcut`은
+메소드 선정 기능만을 갖고있을 뿐, 클래스 필터의 기능은 존재하지 않습니다.
+
+따라서, 이 클래스를 확장하여 클래스 필터의 기능으로서도 작동하도록 만들어 봅시다.
+
+**NameMathClassMethodPointcut.java**
+```java
+public class NameMatchClassMethodPointcut extends NameMatchMethodPointcut {
+
+    public void setMappedClassName(String mappedClassName){
+        this.setClassFilter(new SimpleFilter(mappedClassName));
+    }
+
+    @RequiredArgsConstructor
+    static class SimpleFilter implements ClassFilter{
+        private final String mappedName;
+
+        @Override
+        public boolean matches(Class<?> clazz) {
+            return PatternMatchUtils.simpleMatch(mappedName, clazz.getSimpleName());
+        }
+    }
+}
+
+```
+
+```java
+public void setMappedClassName(String mappedClassName){
+        this.setClassFilter(new SimpleFilter(mappedClassName));
+    }
+```
+여기서 `setClassFilter`가 어떻게 나왔는지 의아하실수도 있습니다.
+
+왜냐면, `NameMatchMethodPointcut`또한 `Pointcut`이라는 인터페이스를 implements했기 때문입니다.
+
+```java
+public interface Pointcut {
+    Pointcut TRUE = TruePointcut.INSTANCE;
+
+    ClassFilter getClassFilter();
+
+    MethodMatcher getMethodMatcher();
+}
+```
+```java
+public abstract class StaticMethodMatcherPointcut extends StaticMethodMatcher implements Pointcut {
+    private ClassFilter classFilter;
+
+    public StaticMethodMatcherPointcut() {
+        this.classFilter = ClassFilter.TRUE;
+    }
+
+    public void setClassFilter(ClassFilter classFilter) {
+        this.classFilter = classFilter;
+    }
+
+    public ClassFilter getClassFilter() {
+        return this.classFilter;
+    }
+
+    public final MethodMatcher getMethodMatcher() {
+        return this;
+    }
+}
+```
+
+```java
+public class NameMatchMethodPointcut extends StaticMethodMatcherPointcut implements Serializable {
+    private List<String> mappedNames = new ArrayList();
+
+    public NameMatchMethodPointcut() {
+    }
+
+    public void setMappedName(String mappedName) {
+        this.setMappedNames(mappedName);
+    }
+
+    public void setMappedNames(String... mappedNames) {
+        this.mappedNames = new ArrayList(Arrays.asList(mappedNames));
+    }
+
+    public NameMatchMethodPointcut addMethodName(String name) {
+        this.mappedNames.add(name);
+        return this;
+    }
+
+    public boolean matches(Method method, Class<?> targetClass) {
+        Iterator var3 = this.mappedNames.iterator();
+
+        String mappedName;
+        do {
+            if (!var3.hasNext()) {
+                return false;
+            }
+
+            mappedName = (String)var3.next();
+        } while(!mappedName.equals(method.getName()) && !this.isMatch(method.getName(), mappedName));
+
+        return true;
+    }
+
+    protected boolean isMatch(String methodName, String mappedName) {
+        return PatternMatchUtils.simpleMatch(mappedName, methodName);
+    }
+
+    public boolean equals(@Nullable Object other) {
+        return this == other || other instanceof NameMatchMethodPointcut && this.mappedNames.equals(((NameMatchMethodPointcut)other).mappedNames);
+    }
+
+    public int hashCode() {
+        return this.mappedNames.hashCode();
+    }
+
+    public String toString() {
+        return this.getClass().getName() + ": " + this.mappedNames;
+    }
+}
+```
+이런 식으로 구성되어 있습니다.  이로써, 클래스 필터기능 또한 가진 Pointcut을 작성 완료하였습니다.
+
+이제, Advisor를 이용하는 자동 프록시 생성기가 어떤 순서로 작동을 하는지 알아보고 코드를 작성해봅시다.
+
+1. `DefaultAdvisorAutoProxyCreator`는 등록된 빈 중에서 Advisor인터페이스를 구현한 것을 모두 찾습니다.
+2. Advisor의 Pointcut을 적용해보면서 모든 빈에 대하여 프록시 적용 대상을 선정합니다.
+3. 빈이 프록시 적용 대상이라면 프록시를 만들어 원래 빈 오브젝트와 바꿉니다.
+4. 이제 원래 빈은 프록시를 통해 접근가능하도록 설정이 완료 됩니다.
+
+👍 **참고로! `DefaultAdvisorAutoProxyCreator`는 빈으로만 등록해 두시면 됩니다.**
+
+**AppConfig.java**
+```java
+@Configuration
+@RequiredArgsConstructor
+@EnableTransactionManagement
+public class AppConfig {
+
+    private final Environment env;
+
+    @Bean
+    public DataSource dataSource(){
+        SimpleDriverDataSource dataSource=new SimpleDriverDataSource();
+        dataSource.setDriverClass(org.h2.Driver.class);
+        dataSource.setUrl(env.getProperty("spring.datasource.url"));
+        dataSource.setUsername(env.getProperty("spring.datasource.username"));
+        dataSource.setPassword(env.getProperty("spring.datasource.password"));
+
+        return dataSource;
+    }
+
+    @Bean
+    public PlatformTransactionManager transactionManager(){
+        return new DataSourceTransactionManager(dataSource());
+    }
+
+    @Bean
+    public JdbcOperations jdbcOperations(){
+        return new JdbcTemplate(dataSource());
+    }
+
+    @Bean
+    public UserDao userDao(){
+        return new UserDaoImpl(jdbcOperations());
+    }
+
+    @Bean
+    public TransactionAdvice transactionAdvice(){
+        return new TransactionAdvice(transactionManager());
+    }
+
+    @Bean
+    public NameMatchClassMethodPointcut transactionPointcut(){
+        NameMatchClassMethodPointcut pointcut=new NameMatchClassMethodPointcut();
+        pointcut.setMappedClassName("*ServiceImpl");
+        pointcut.setMappedNames("upgrade*");
+        return pointcut;
+    }
+
+    @Bean
+    public DefaultPointcutAdvisor transactionAdvisor(){
+        return new DefaultPointcutAdvisor(transactionPointcut(),transactionAdvice());
+    }
+    
+    //빈 후처리기 등록
+    @Bean
+    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator(){
+        return new DefaultAdvisorAutoProxyCreator();
+    }
+
+    @Bean
+    public UserService userService(){
+        return new UserServiceImpl(userDao(),mailSender());
+    }
+
+
+}
+```
+
+코드 작성또한 완료했으며, 빈 후처리기를 통한 부가기능 부여 또한 완벽히 수행하였습니다.
+
+***
