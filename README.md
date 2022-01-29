@@ -1213,3 +1213,112 @@ public class AppConfig {
 코드 작성또한 완료했으며, 빈 후처리기를 통한 부가기능 부여 또한 완벽히 수행하였습니다.
 
 ***
+
+### 🚀 Pointcut 표현식
+
+지금까지 발전해온 과정을 살펴보면, 일일이 클래스 필터와 메소드 매처를 구현하거나 기본적으로 스프링이 제공하는 기능을 사용해왔습니다.
+
+지금까지는 단순히 클래스 이름이나 메소드 이름을 비교하는 것이 전부였다면, 일종의 표현식 언어를 사용하여 좀 더 세밀하게 선정 알고리즘을 짤 수 있습니다.
+
+이렇게 고안된 것이 포인트컷 표현식이라고 합니다.
+
+포인트컷 표현식은 `AspectJExpressionPointcut` 클래스를 사용하면 됩니다.
+
+`NameMatchClassMethodPointcut`은 클래스와 메소드의 이름을 각각 독립적으로 비교한 반면에, 표현식으로는 한번에 지정가능하게 해줍니다.
+
+`AspectJExpressionPointcut`의 이름을 보다시피, 스프링은 `AspectJ`라는 프레임워크에서 제공하는 것을 사용하게 되며, 이것을 AspectJ표현식이라 부릅니다.
+
+#### 🔍 포인트컷 표현식 문법
+
+AspectJ 포인트컷 표현식은 포인트컷 지시자를 이용해 작성합니다. 포인트컷 지시자중에서 가장 대표적으로 사용되는 것은 execution입니다.
+
+`execution(접근제한자 타입패턴:return 타입 타입패턴:클래스 타입.이름패턴(메소드) (타입패턴:파라미터패턴) throws 예외패턴) `
+
+1. : 는 설명을 의미합니다.
+2. 접근제한자, 클래스 타입패턴, 예외패턴 등은 생략가능합니다.
+
+**문법에 대한 자세한 설명은 생략하도록 하겠습니다!**
+
+이제는 Pointcut표현식을 AspectJ 메소드의 파리미터로 하면 실행 가능하게 됩니다.
+
+**Pointcut을 적용해 보도록 하겠습니다.**
+
+포인트컷 표현식에는 위에서 잠시 언급했던 execution 외에도 bean을 선택하여주는 bean()메소드, 또한 특정 애노테이션이 타입, 메소드, 파라미터에 적용되어 있는 것을 보고
+메소드를 선정하게 하는 포인트컷을 만들 수 있습니다. 예를 들면 `@Transactional` 과 같은 경우를 말합니다.
+
+포인트컷 표현식은 AspectJExpressionPointcut빈을 등록하고 expression 프로퍼티에 넣어주면 됩니다. 클래스이름은 ServiceImpl로 끝나고 메소드 이름은
+upgrade로 시작하는 모든 클래스에 적용되도록 코드를 짜봅시다.
+
+**AppConfig.java**
+```java
+@Configuration
+@RequiredArgsConstructor
+@EnableTransactionManagement
+public class AppConfig {
+
+    private final Environment env;
+
+    @Bean
+    public DataSource dataSource(){
+        SimpleDriverDataSource dataSource=new SimpleDriverDataSource();
+        dataSource.setDriverClass(org.h2.Driver.class);
+        dataSource.setUrl(env.getProperty("spring.datasource.url"));
+        dataSource.setUsername(env.getProperty("spring.datasource.username"));
+        dataSource.setPassword(env.getProperty("spring.datasource.password"));
+
+        return dataSource;
+    }
+
+    @Bean
+    public PlatformTransactionManager transactionManager(){
+        return new DataSourceTransactionManager(dataSource());
+    }
+
+    @Bean
+    public JdbcOperations jdbcOperations(){
+        return new JdbcTemplate(dataSource());
+    }
+
+    @Bean
+    public UserDao userDao(){
+        return new UserDaoImpl(jdbcOperations());
+    }
+
+    @Bean
+    public TransactionAdvice transactionAdvice(){
+        return new TransactionAdvice(transactionManager());
+    }
+
+    //추가된 부분
+    @Bean
+    public AspectJExpressionPointcut transactionPointcut(){
+        AspectJExpressionPointcut pointcut=new AspectJExpressionPointcut();
+        pointcut.setExpression("bean(*Service)");
+        return pointcut;
+    }
+
+    @Bean
+    public DefaultPointcutAdvisor transactionAdvisor(){
+        return new DefaultPointcutAdvisor(transactionPointcut(),transactionAdvice());
+    }
+    
+    //빈 후처리기 등록
+    @Bean
+    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator(){
+        return new DefaultAdvisorAutoProxyCreator();
+    }
+
+    @Bean
+    public UserService userService(){
+        return new UserServiceImpl(userDao(),mailSender());
+    }
+
+
+}
+```
+
+지금까지의 과정을 거쳐 `AspectJExpressionPointcut`의 적용까지 완료했습니다.
+
+***
+
+### 🚀 AOP란?!
