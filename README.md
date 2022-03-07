@@ -8,3 +8,4 @@
 ### 🚀 Lec2. Basic Kubernetes
 1. Pod : <a href="https://github.com/sungjin0757/kebernetes-basic/tree/master/Lec2.%20Basic%20Object/Pod%20-%20Kubernetes" target="_blank">🙋🏻‍♂️ 바로가기</a>
 2. Service : <a href="https://github.com/sungjin0757/kebernetes-basic/tree/master/Lec2.%20Basic%20Object/Service%20-%20Kubernetes" target="_blank">👋 바로가기</a>
+3. Volume : <a href="https://github.com/sungjin0757/kebernetes-basic/tree/master/Lec2.%20Basic%20Object/Volume%20-%20Kubernetes" target="_blank">😁 바로가기</a>
