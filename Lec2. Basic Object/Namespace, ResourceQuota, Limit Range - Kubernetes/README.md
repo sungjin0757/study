@@ -224,3 +224,267 @@ spec:
 - **분리되지 않는 것**
   1. IP주소 접근
   2. HostPath 형태의 Volume    
+
+***
+
+### 🚀 ResourceQuota
+
+<span style="color:lightpink; font-weight:bold;">Namespace</span>의 <span style="color:lightpink; font-weight:bold;">Pod</span>들이 사용하는 <span style="color:lightpink; font-weight:bold;">공유 자원</span>에 대한 자원 한계를 달아 놓는 것입니다.
+
+사용 방법은 <span style="color:lightpink; font-weight:bold;">Pod</span>를 만들 때, <span style="color:lightpink; font-weight:bold;">Memory</span>의 <span style="color:lightpink; font-weight:bold;">requests</span>와 <span style="color:lightpink; font-weight:bold;">limits</span>를 정해 놓으면 됩니다.
+
+**이제 실습한번 해봅시다!**
+
+**ns3.yaml**
+
+```json
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ns-3
+```
+
+**rq.yaml**
+
+```json
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: rq-1
+  namespace: ns-3
+spec:
+  hard:
+    requests.memory: 1Gi
+    limits.memory: 1Gi
+```
+
+**ResourceQuota가 잘 만들어 졌는지 확인해봅시다!**
+
+`kubectl describe resourcequotas --namespace=ns-3`
+
+<img width="70%" alt="스크린샷 2022-03-15 오후 7 04 43" src="https://user-images.githubusercontent.com/56334761/158354324-066eb9b4-afc0-4add-82cd-6ecb360abf0c.png">
+
+**이제 Pod를 생성해보도록 합시다!**
+**pod3.yaml**
+
+```json
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-3
+  namespace: ns-3
+spec:
+  containers:
+  - name: container
+    image: kubetm/app
+```
+
+<img width="70%" alt="스크린샷 2022-03-15 오후 7 07 38" src="https://user-images.githubusercontent.com/56334761/158354823-df13d712-30e1-40c8-a93b-9ca23eddc9a8.png">
+
+**오류가 뜨게 됩니다.**
+
+**이렇게 오류가 뜨는 이유는 namespace상에 resourcequota가 정의 되어 있는데 limits와 requests가 명시되어 있지 않기 때문입니다.**
+
+**pod3의 내용을 수정하도록 합시다**
+
+```json
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-3
+  namespace: ns-3
+spec:
+  containers:
+  - name: container
+    image: kubetm/app
+    resources:
+      requests:
+        memory: 0.5Gi
+      limits:
+        memory: 0.5Gi
+```
+
+<img width="70%" alt="스크린샷 2022-03-15 오후 7 14 17" src="https://user-images.githubusercontent.com/56334761/158355888-8091c46f-2af7-4057-8af5-ed3df78a961a.png">
+
+**Pod가 잘 생성된 것을 확인 하였으며, 메모리 사용량 또한 올라간 것을 확인할 수 있습니다!**
+
+**그럼, 이제 memory의 사용량이 현재 ResourceQuota를 넘는 Pod를 만들어 봅시다!**
+
+
+**pod4.yaml**
+
+```json
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-4
+  namespace: ns-3
+spec:
+  containers:
+  - name: container
+    image: kubetm/app
+    resources:
+      requests:
+        memory: 0.8Gi
+      limits:
+        memory: 0.8Gi
+```
+
+<img width="571" alt="스크린샷 2022-03-15 오후 7 18 26" src="https://user-images.githubusercontent.com/56334761/158356634-615ab807-8514-4f9d-82ea-76b9f390038f.png">
+
+**한계 사용량을 뛰어넘어 pod가 생성되지 않는 것을 확인하였습니다!**
+
+**👍 ResourceQuota는 Pod의 수도 제한 할 수 있습니다**
+
+**rq2.yaml**
+
+```json
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: rq-2
+  namespace: ns-3
+spec:
+  hard:
+    pods: 1
+```
+
+<img width="70%" alt="스크린샷 2022-03-15 오후 7 28 48" src="https://user-images.githubusercontent.com/56334761/158358342-3364eda8-bc5c-4b75-9c14-c0a8f43f53de.png">
+
+**이제 pod를 하나 더 만들어 보도록 합시다!**
+
+**pod5.yaml**
+
+```json
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-5
+  namespace: ns-3
+spec:
+  containers:
+  - name: container
+    image: kubetm/app
+    resources:
+      requests:
+        memory: 0.1Gi
+      limits:
+        memory: 0.1Gi
+```
+
+<img width="70%" alt="스크린샷 2022-03-15 오후 7 30 20" src="https://user-images.githubusercontent.com/56334761/158358597-e6cbcbe1-45b5-478e-9648-c3d0570b576e.png">
+
+**잘 만들어지지 않는 것을 확인할 수 있습니다!**
+
+***
+
+### 🚀 LimitRange
+
+각각의 <span style="color:lightpink; font-weight:bold;">Pod</span>마다 <span style="color:lightpink; font-weight:bold;">Namespace</span>에 들어올 수 있는지 자원을 체크하여, <span style="color:lightpink; font-weight:bold;">Pod</span>마다 세세한 조건을 둘 수 있습니다.
+
+**이제 실습을 해보도록 합시다!**
+
+**ns4.yaml**
+
+```json
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ns-4
+```
+
+<img width="70%" alt="스크린샷 2022-03-15 오후 7 42 47" src="https://user-images.githubusercontent.com/56334761/158360663-8f816bd9-3ebe-4646-b821-320fed5dabd2.png">
+
+**lr.yaml**
+
+```json
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: lr-1
+  namespace: ns-4
+spec:
+  limits:
+  - type: Container
+    min:
+      memory: 0.1Gi
+    max:
+      memory: 0.4Gi
+    maxLimitRequestRatio:
+      memory: 3
+    defaultRequest:
+      memory: 0.1Gi
+    default:
+      memory: 0.2Gi
+```
+
+`kubectl describe limitranges --namespace=ns-4`
+
+<img width="70%" alt="스크린샷 2022-03-15 오후 7 50 39" src="https://user-images.githubusercontent.com/56334761/158362015-145da163-67ce-42d4-a92e-6965b05875fe.png">
+
+**잘 만들어 졌습니다**
+
+이제 옵션들에 대해서 설명해 봅시다.
+1. min : Pod에서 설정되는 Memory의 Limit 값이 이 min을 넘어야 한다는 것을 뜻합니다.
+2. max : Pod에서 설정되는 Memory의 Limit 값이 이 max를 넘어서는 안됩니다.
+3. maxLimitRequestRatio : request값과 limit값의 비율의 최대 값을 뜻합니다.
+4. defaultRequest : Pod에 아무런 값을 설정 하지 않았을 때 자동으로 설정되는 request값 입니다.
+5. default : Pod에 아무런 값을 설정 하지 않았을 때 자동으로 설정 되는 Limit 값 입니다.
+
+**이제, 2개의 Pod를 만들어 실습해 보도록 하겠습니다.**
+1. request와 limit을 설정하지 않은 Pod
+2. maxLimitRequestRatio의 비율을 넘어선 Pod
+
+**pod6.yaml**
+
+```json
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: pod-6
+  namespace: ns-4
+spec:
+  containers:
+  - name: container
+    image: kubetm/app
+```
+
+<img width="70%" alt="스크린샷 2022-03-15 오후 7 59 31" src="https://user-images.githubusercontent.com/56334761/158363529-98228db4-9270-491d-9f5f-c83b12ed8dd2.png">
+
+만들어진 pod의 yaml에 들어가 봅시다!
+
+`kubectl edit pod pod-6 -o yaml`
+
+<img width="70%" alt="스크린샷 2022-03-15 오후 8 02 33" src="https://user-images.githubusercontent.com/56334761/158364157-f9173eaf-af5b-416b-af63-9175b1962433.png">
+
+자동으로 request, limit이 설정된 것을 확인 하였습니다.
+
+**pod7.yaml**
+
+```json
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: pod-7
+  namespace: ns-4
+spec:
+  containers:
+  - name: container
+    image: kubetm/app
+    resources:
+      requests:
+        memory: 0.1Gi
+      limits:
+        memory: 0.4Gi
+```
+
+request와 limit의 비율이 4배인 pod를 생성해보도록 합시다.
+
+<img width="70%" alt="스크린샷 2022-03-15 오후 8 07 00" src="https://user-images.githubusercontent.com/56334761/158365003-bdf1cc41-2654-498d-9c8c-d9066a452006.png">
+
+**Pod가 생성되지 못한 모습을 볼 수 있습니다!**
+
+**실습을 마치도록 하겠습니다.**
+
+***
+### <span style="color:lightpink; font-weight:bold;">이상으로 마치겠습니다. 🙋🏻‍♂️</span>
