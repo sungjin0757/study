@@ -1,10 +1,8 @@
 ## Pod - Container, Label, Node Schedule
 ***
 
->이 글은 김태민님의 대세는 쿠버네티스 강의를 참고하여 정리하였습니다!
->
->출처 : https://www.inflearn.com/course/%EC%BF%A0%EB%B2%84%EB%84%A4%ED%8B%B0%EC%8A%A4-%EA%B8%B0%EC%B4%88/dashboard
-***
+
+
 
 ### 🔍 테스트 해 볼 내용
 1. <span style="color:lightpink; font-weight:bold;">Pod</span>가 어떻게 구성되어 있는지 알아 봅시다.
