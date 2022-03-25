@@ -16,3 +16,4 @@
 ### 🚀 Lec3. Controller
 1. ReplicationController, Replica Set : <a href="https://github.com/sungjin0757/kebernetes-basic/tree/master/Lec3.%20Controller/Replication%20Controller%2C%20ReplicaSet%20-%20Kuberntes" target="_blank">😆 바로가기</a>
 2. Deployment : <a href="https://github.com/sungjin0757/kebernetes-basic/tree/master/Lec3.%20Controller/Deployment%20-%20Kubernetes" target="_blank">😆 바로가기</a>
+3. Job, CronJob : <a href="https://github.com/sungjin0757/kebernetes-basic/tree/master/Lec3.%20Controller/Job%2C%20CronJob%20-%20Kubernetes" target="_blank">🙂 바로가기</a>

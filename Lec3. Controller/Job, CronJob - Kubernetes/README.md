@@ -34,6 +34,49 @@
 <span style="color:lightpink; font-weight:bold;">Finish</span>는 <span style="color:lightpink; font-weight:bold;">Pod</span>를 지우는 것이 아닌, 노드의 자원을 사용하지 않겠다는 것을 뜻합니다.
 <span style="color:lightpink; font-weight:bold;">Finish</span>된 <span style="color:lightpink; font-weight:bold;">Pod</span>에 접속하여 <span style="color:lightpink; font-weight:bold;">Log</span> 등을 확인할 수 있고 원하는 경우 직접 삭제할 수 있습니다.
 
+**이제 Job을 만들어 보도록합시다**
+
+**Job1.yaml**
+
+```json
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-1
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: container
+        image: kubetm/init
+        command: ["sh", "-c", "echo 'job start';sleep 20; echo 'job end'"]
+      terminationGracePeriodSeconds: 0
+```
+
+**20초가 지나면 Job을 종료시키겠다는 것을 뜻합니다.**
+
+<img width="70%" alt="스크린샷 2022-03-26 오전 2 25 58" src="https://user-images.githubusercontent.com/56334761/160171179-ed3b1a2a-32c8-4fc1-98c7-827832a1a000.png">
+
+<img width="70%" alt="스크린샷 2022-03-26 오전 2 27 00" src="https://user-images.githubusercontent.com/56334761/160171359-3f739c64-5f7a-4ece-92c3-e7f366e435d0.png">
+
+**job이 만들어지면서 Pod또한 만들어진 것을 볼 수 있습니다.**
+
+<img width="70%" alt="스크린샷 2022-03-26 오전 2 30 23" src="https://user-images.githubusercontent.com/56334761/160171960-2895470b-e9ad-490f-8e4d-86584f8009f8.png">
+
+**Sat, 26 Mar 2022 02:29:22 에 Pod가 Running중인 것을 확인할 수 있습니다.**
+
+**20초가 지나고 Pod의 상태를 확인해봅시다.**
+
+<img width="865" alt="스크린샷 2022-03-26 오전 2 33 34" src="https://user-images.githubusercontent.com/56334761/160172487-7efb0f58-bc5d-42e2-a38d-9cb0d6e67cf3.png">
+
+**Pod가 종료된 것을 확인하였습니다.**
+
+**이제, Pod에 접속해서 Log를 확인해보도록합시다!**
+
+`kubectl logs -f pod/job-1-g5sfh`
+
+<img width="70%" alt="스크린샷 2022-03-26 오전 2 36 17" src="https://user-images.githubusercontent.com/56334761/160172812-9c5cba10-d406-4df1-81f9-515b19d05704.png">
 ***
 
 ### 🚀 CronJob
@@ -43,6 +86,35 @@
 <span style="color:lightpink; font-weight:bold;">Job</span>을 하나 단위로 쓰지는 않고 <span style="color:lightpink; font-weight:bold;">CronJob</span>을 만들어서 특정시간에 반복적으로 사용하기 위해서 만듭니다.
 
 ex) 예약메일, 주기적인 Update확인.
+
+**1분마다 Job을 만드는 CronJob을 생성해보도록 합시다.**
+
+**cj.yaml**
+
+```json
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cj
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: container
+            image: kubetm/init
+            command: ["sh", "-c", "echo 'job start';sleep 20; echo 'job end'"]
+          terminationGracePeriodSeconds: 0
+```
+
+<img width="70%" alt="스크린샷 2022-03-26 오전 2 36 17" src="https://user-images.githubusercontent.com/56334761/160172812-9c5cba10-d406-4df1-81f9-515b19d05704.png">
+
+<img width="70%" alt="스크린샷 2022-03-26 오전 2 44 09" src="https://user-images.githubusercontent.com/56334761/160174049-0f910c09-42f0-4506-b07b-c2b025c352a0.png">
+
+**시간대를 주목하시면 1분마다 Job을 생성하는 것을 볼 수 있습니다!**
 
 ***
 ### <span style="color:lightpink; font-weight:bold;">이상으로 마치겠습니다. 🙋🏻‍♂️</span>
