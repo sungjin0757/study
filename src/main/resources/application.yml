@@ -13,3 +13,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
+#    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        user_sql_comments: true
+
+logging.level:
+  org.hibernate.SQL: debug
+  org.hiberate.type: trace

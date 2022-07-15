@@ -45,12 +45,15 @@ querydsl {
 	jpa = true
 	querydslSourcesDir = querydslDir
 }
+// Intellij가 자동으로 Import 해줄 수 있도록
 sourceSets {
 	main.java.srcDir querydslDir
 }
+// 컴파일 될 때 같이, querydsl이 돌도록
 configurations {
 	querydsl.extendsFrom compileClasspath
 }
+// annotationProcessor가 돌면서 Q파일을 생성
 compileQuerydsl {
 	options.annotationProcessorPath = configurations.querydsl
 }
