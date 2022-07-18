@@ -1,9 +1,12 @@
 package study.querydsl.learning;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
@@ -495,5 +498,157 @@ public class QueryDslLearningTest {
         for (UserDto userDto : res1) {
             System.out.println(userDto);
         }
+    }
+
+    @Test
+    @DisplayName("dynamic query - booleanBuilder")
+    void dynamic_BooleanBuilder(){
+        String nameParam = "user1";
+        Integer ageParam = 10;
+
+        List<User> findUsers = searchUserV1(nameParam, ageParam);
+
+        Assertions.assertAll(() -> {
+            Assertions.assertEquals(findUsers.size(), 1);
+        });
+    }
+
+    @Test
+    @DisplayName("dynamic query - where")
+    void dynamic_Where(){
+        List<User> findUsers = queryFactory
+                .selectFrom(user)
+                .where(userNameEq("user1"),
+                        ageEq(10))
+                .fetch();
+
+        List<User> findUsers2 = queryFactory
+                .selectFrom(user)
+                .where(userNameEq(null),
+                        ageEq(10))
+                .fetch();
+
+        Assertions.assertAll(() -> {
+            Assertions.assertEquals(findUsers.size(), 1);
+            Assertions.assertEquals(findUsers2.size(), 2);
+        });
+    }
+
+    @Test
+    @DisplayName("Bulk 테스트")
+    void bulk(){
+
+        // user1 = user1 DB HONG
+        // user2 = user2 DB HONG
+        // user3 = user3 DB HONG
+        // user4 = user4 DB HONG
+        // DB 에 바로 쿼리 연산을 때렸기 때문에 영속성 컨텍스트와 불일치 발생함.
+        long count = queryFactory
+                .update(user)
+                .set(user.userName, "Hong")
+                .where(user.age.lt(30))
+                .execute();
+
+        List<User> findUsers1 = queryFactory
+                .selectFrom(user)
+                .fetch();
+
+        em.flush();
+        em.clear();
+
+        List<User> findUsers2 = queryFactory
+                .selectFrom(user)
+                .fetch();
+
+        Assertions.assertAll(() -> {
+            org.assertj.core.api.Assertions.assertThat(findUsers1)
+                    .extracting("userName")
+                    .doesNotContain("Hong");
+
+            org.assertj.core.api.Assertions.assertThat(findUsers2)
+                    .extracting("userName")
+                    .doesNotContain("user1", "user2");
+        });
+    }
+
+    @Test
+    @DisplayName("bulk Operation")
+    void bulk_Operation(){
+        long count = queryFactory
+                .update(user)
+                .set(user.age, user.age.add(1))
+                .execute();
+
+        em.flush();
+        em.clear();
+    }
+
+    @Test
+    @DisplayName("bulk Delete")
+    void bulk_Delete(){
+        long count = queryFactory
+                .delete(user)
+                .where(user.userName.eq("user1"))
+                .execute();
+
+        em.flush();
+        em.clear();
+
+        List<User> res = queryFactory
+                .selectFrom(user)
+                .fetch();
+
+        Assertions.assertAll(() -> {
+            Assertions.assertEquals(res.size(), 3);
+        });
+    }
+
+    @Test
+    @DisplayName("SQL Function")
+    void sqlFunction(){
+        List<String> res = queryFactory
+                .select(
+                        Expressions.stringTemplate("function('replace', {0}, {1}, {2})",
+                                user.userName, "user", "u"))
+                .from(user)
+                .fetch();
+
+        for (String re : res) {
+            System.out.println(re);
+        }
+    }
+
+    private BooleanExpression userNameEq(String userNameCond){
+        if (userNameCond == null){
+            return null;
+        }
+        return user.userName.eq(userNameCond);
+    }
+
+    private BooleanExpression ageEq(Integer ageCond){
+        if(ageCond == null){
+            return null;
+        }
+        return user.age.eq(ageCond);
+    }
+
+    private BooleanExpression allEq(String userNameCond, Integer ageCond){
+        return userNameEq(userNameCond).and(ageEq(ageCond));
+    }
+
+    private List<User> searchUserV1(String usernameCond, Integer ageCond){
+        BooleanBuilder booleanBuilder = new BooleanBuilder();
+        if(usernameCond != null){
+            booleanBuilder.and(user.userName.eq(usernameCond));
+        }
+
+        if(ageCond != null){
+            booleanBuilder.and(user.age.eq(ageCond));
+        }
+
+        return queryFactory
+                .selectFrom(user)
+                .where(booleanBuilder)
+                .fetch();
     }
 }

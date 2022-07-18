@@ -15,7 +15,7 @@ import java.util.Objects;
     sequenceName = "USER_SEQ",
     initialValue = 1, allocationSize = 100)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString(of = {"id", "name", "age"})
+@ToString(of = {"id", "userName", "age"})
 public class User extends AbstractDateTraceEntity{
 
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE,
