@@ -2,6 +2,9 @@ package study.querydsl.learning;
 
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -12,6 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import study.querydsl.dto.QUserDto;
+import study.querydsl.dto.UserDto;
+import study.querydsl.dto.UserDto2;
 import study.querydsl.entity.QTeam;
 import study.querydsl.entity.QUser;
 import study.querydsl.entity.Team;
@@ -368,6 +374,126 @@ public class QueryDslLearningTest {
 
         for (String re : res) {
             System.out.println(re);
+        }
+    }
+
+    @Test
+    @DisplayName("Projection 테스트")
+    void projection(){
+        List<Integer> userAge = queryFactory
+                .select(user.age)
+                .from(user)
+                .fetch();
+
+        List<Tuple> fetch = queryFactory
+                .select(user.userName, user.age)
+                .from(user)
+                .fetch();
+
+        for (Integer integer : userAge) {
+            System.out.println(integer);
+        }
+
+        for (Tuple tuple : fetch) {
+            String name = tuple.get(user.userName);
+            Integer age = tuple.get(user.age);
+
+            System.out.println(name+ ", "+age);
+        }
+    }
+
+    @Test
+    @DisplayName("find Dto (JPQL) 테스트")
+    void findDtoByJpql(){
+        List<UserDto> resultList = em.createQuery("select " +
+                "new study.querydsl.dto.UserDto(u.userName, u.age) " +
+                "from User u", UserDto.class).getResultList();
+
+        for (UserDto userDto : resultList) {
+            System.out.println(userDto);
+        }
+    }
+
+    @Test
+    @DisplayName("find Dto (QueryDsl) 테스트")
+    void findDtoByQueryDsl(){
+        // setter
+        List<UserDto> res1 = queryFactory
+                .select(Projections.bean(UserDto.class, user.userName, user.age))
+                .from(user)
+                .fetch();
+
+        // 필드 (getter, setter 무시), private 이어도 상관 없이
+        List<UserDto> res2 = queryFactory
+                .select(Projections.fields(UserDto.class, user.userName, user.age))
+                .from(user)
+                .fetch();
+
+        // 생성자
+        List<UserDto> res3 = queryFactory
+                .select(Projections.constructor(UserDto.class, user.userName, user.age))
+                .from(user)
+                .fetch();
+
+        List<UserDto2> res4 = queryFactory
+                .select(Projections.fields(UserDto2.class,
+                        user.userName.as("name"), user.age.as("ag")))
+                .from(user)
+                .fetch();
+
+        QUser userSub = new QUser("userSub");
+
+        List<UserDto2> res5 = queryFactory
+                .select(Projections.fields(UserDto2.class,
+                        user.userName.as("name"),
+
+                        ExpressionUtils.as(JPAExpressions.select(userSub.age.max())
+                                .from(userSub), "ag")))
+                .from(user)
+                .fetch();
+
+        // 생성자는 타입만 맞으면 됨.
+        List<UserDto2> res6 = queryFactory
+                .select(Projections.constructor(UserDto2.class,
+                        user.userName, user.age))
+                .from(user)
+                .fetch();
+
+        for (UserDto re : res1) {
+            System.out.println(re);
+        }
+
+        for (UserDto userDto : res2) {
+            System.out.println(userDto);
+        }
+
+        for (UserDto userDto : res3) {
+            System.out.println(userDto);
+        }
+
+        for (UserDto2 userDto2 : res4) {
+            System.out.println(userDto2);
+        }
+
+        for (UserDto2 userDto2 : res5) {
+            System.out.println(userDto2);
+        }
+
+        for (UserDto2 userDto2 : res6) {
+            System.out.println(userDto2);
+        }
+    }
+
+    @Test
+    @DisplayName("QueryProjection 테스트")
+    void queryProjection(){
+        List<UserDto> res1 = queryFactory
+                .select(new QUserDto(user.userName, user.age))
+                .from(user)
+                .fetch();
+
+        for (UserDto userDto : res1) {
+            System.out.println(userDto);
         }
     }
 }
