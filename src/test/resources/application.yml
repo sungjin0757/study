@@ -19,7 +19,7 @@ spring:
         format_sql: true
         user_sql_comments: true
   profiles:
-    active: local
+    active: test
 
 logging.level:
   org.hibernate.SQL: debug

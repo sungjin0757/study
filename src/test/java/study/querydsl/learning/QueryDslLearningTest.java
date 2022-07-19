@@ -41,12 +41,11 @@ public class QueryDslLearningTest {
     @Autowired
     EntityManager em;
 
+    @Autowired
     JPAQueryFactory queryFactory;
 
     @BeforeEach
     void setUp(){
-        queryFactory = new JPAQueryFactory(em);
-
         Team teamA = new Team("teamA");
         Team teamB = new Team("teamB");
 
@@ -95,12 +94,12 @@ public class QueryDslLearningTest {
     void search(){
         User findUser = queryFactory
                 .selectFrom(user)
-                .where(user.userName.eq("user2")
-                        .and(user.age.eq(20)))
+                .where(user.userName.eq("user1")
+                        .and(user.age.eq(10)))
                 .fetchOne();
 
         Assertions.assertAll(()->{
-            Assertions.assertEquals(findUser.getUserName(), "user2");
+            Assertions.assertEquals(findUser.getUserName(), "user1");
         });
     }
 
@@ -111,9 +110,9 @@ public class QueryDslLearningTest {
                 .selectFrom(user)
                 .fetch();
 
-        User findUser = queryFactory
-                .selectFrom(user)
-                .fetchOne();
+//        User findUser = queryFactory
+//                .selectFrom(user)
+//                .fetchOne();
 
         User findUser2 = queryFactory
                 .selectFrom(user)
