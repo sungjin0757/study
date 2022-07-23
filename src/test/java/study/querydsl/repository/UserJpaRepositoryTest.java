@@ -6,8 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.UserSearchCondition;
 import study.querydsl.dto.UserWithTeamDto;
@@ -15,18 +13,17 @@ import study.querydsl.entity.Team;
 import study.querydsl.entity.User;
 
 import javax.persistence.EntityManager;
-
 import java.util.List;
 import java.util.Optional;
 
 @SpringBootTest
 @Transactional
-class UserRepositoryTest {
+class UserJpaRepositoryTest {
     @Autowired
     EntityManager em;
 
     @Autowired
-    UserRepository userRepository;
+    UserJpaRepository userRepository;
 
     User user3;
     User user4;
@@ -94,6 +91,38 @@ class UserRepositoryTest {
         });
     }
 
+    @Test
+    @DisplayName("searchByBuilder Test")
+    void searchByBuilder(){
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+
+        em.persist(teamA);
+        em.persist(teamB);
+
+        User user1 = new User("user1", 10, teamA);
+        User user2 = new User("user2", 10, teamB);
+        User user3 = new User("user3", 30, teamB);
+        User user4 = new User("user4", 40, teamA);
+
+        em.persist(user1);
+        em.persist(user2);
+        em.persist(user3);
+        em.persist(user4);
+
+        UserSearchCondition condition = new UserSearchCondition();
+        condition.setAgeGoe(25);
+        condition.setAgeLoe(40);
+        condition.setTeamName("teamB");
+
+        List<UserWithTeamDto> res = userRepository.searchByBuilder(condition);
+
+        Assertions.assertAll(() -> {
+            org.assertj.core.api.Assertions.assertThat(res)
+                    .extracting("userName")
+                    .containsExactly("user3");
+        });
+    }
 
     @Test
     @DisplayName("searchByWhere Test")
@@ -119,43 +148,12 @@ class UserRepositoryTest {
         condition.setAgeLoe(40);
         condition.setTeamName("teamB");
 
-        List<UserWithTeamDto> res = userRepository.search(condition);
+        List<UserWithTeamDto> res = userRepository.searchByWhere(condition);
 
         Assertions.assertAll(() -> {
             org.assertj.core.api.Assertions.assertThat(res)
                     .extracting("userName")
                     .containsExactly("user3");
-        });
-    }
-
-    @Test
-    @DisplayName("searchPageSim Test")
-    void searchPageSim(){
-        Team teamA = new Team("teamA");
-        Team teamB = new Team("teamB");
-
-        em.persist(teamA);
-        em.persist(teamB);
-
-        User user1 = new User("user1", 10, teamA);
-        User user2 = new User("user2", 10, teamB);
-        User user3 = new User("user3", 30, teamB);
-        User user4 = new User("user4", 40, teamA);
-
-        em.persist(user1);
-        em.persist(user2);
-        em.persist(user3);
-        em.persist(user4);
-
-        UserSearchCondition condition = new UserSearchCondition();
-        PageRequest pageRequest = PageRequest.of(0,3);
-
-        Page<UserWithTeamDto> res = userRepository.searchPageSim(condition,pageRequest);
-
-        List<UserWithTeamDto> content = res.getContent();
-
-        Assertions.assertAll(() -> {
-            Assertions.assertEquals(res.getSize(), 3);
         });
     }
 }

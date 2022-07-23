@@ -6,12 +6,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 import study.querydsl.dto.QUserWithTeamDto;
 import study.querydsl.dto.UserSearchCondition;
 import study.querydsl.dto.UserWithTeamDto;
-import study.querydsl.entity.QTeam;
-import study.querydsl.entity.QUser;
 import study.querydsl.entity.User;
 
 import javax.persistence.EntityManager;
@@ -25,7 +22,7 @@ import static study.querydsl.entity.QUser.*;
 @Repository
 @RequiredArgsConstructor
 @Slf4j
-public class UserRepositoryByQueryDsl implements UserRepository{
+public class UserRepositoryByQueryDsl implements UserJpaRepository {
     private final EntityManager em;
     private final JPAQueryFactory queryFactory;
 

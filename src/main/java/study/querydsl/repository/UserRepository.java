@@ -1,17 +1,10 @@
 package study.querydsl.repository;
 
-import study.querydsl.dto.UserSearchCondition;
-import study.querydsl.dto.UserWithTeamDto;
+import org.springframework.data.jpa.repository.JpaRepository;
 import study.querydsl.entity.User;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface UserRepository {
-    void save(User user);
-    Optional<User> findById(Long id);
-    List<User> findAll();
+public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryCustom {
     List<User> findByUserName(String userName);
-    List<UserWithTeamDto> searchByBuilder(UserSearchCondition condition);
-    List<UserWithTeamDto> searchByWhere(UserSearchCondition condition);
 }

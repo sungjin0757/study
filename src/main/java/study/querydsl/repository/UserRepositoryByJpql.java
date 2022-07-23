@@ -1,8 +1,6 @@
 package study.querydsl.repository;
 
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
 import study.querydsl.dto.UserSearchCondition;
 import study.querydsl.dto.UserWithTeamDto;
 import study.querydsl.entity.User;
@@ -13,7 +11,7 @@ import java.util.Optional;
 
 //@Repository
 @RequiredArgsConstructor
-public class UserRepositoryByJpql implements UserRepository {
+public class UserRepositoryByJpql implements UserJpaRepository {
     private final EntityManager em;
 
     public void save(User user){
