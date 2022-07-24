@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.UserSearchCondition;
 import study.querydsl.dto.UserWithTeamDto;
+import study.querydsl.entity.QUser;
 import study.querydsl.entity.Team;
 import study.querydsl.entity.User;
 
@@ -18,6 +19,8 @@ import javax.persistence.EntityManager;
 
 import java.util.List;
 import java.util.Optional;
+
+import static study.querydsl.entity.QUser.*;
 
 @SpringBootTest
 @Transactional
@@ -157,5 +160,15 @@ class UserRepositoryTest {
         Assertions.assertAll(() -> {
             Assertions.assertEquals(res.getSize(), 3);
         });
+
+    }
+
+    @Test
+    @DisplayName("QueryDslExecutor Test")
+    void queryDslExecutor(){
+        Iterable<User> res = userRepository.findAll(user.age.between(20, 40).and(user.userName.eq("user3")));
+        for (User re : res) {
+            System.out.println(re);
+        }
     }
 }
