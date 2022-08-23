@@ -1,14 +1,13 @@
 package basic.redisstudy.learningtest;
 
 import basic.redisstudy.learningtest.entity.UserTestEntity;
-import basic.redisstudy.learningtest.util.RedisTemplateUtil;
+import basic.redisstudy.util.RedisTemplateUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import javax.annotation.Resource;

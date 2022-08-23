@@ -1,4 +1,4 @@
-package basic.redisstudy.learningtest.util;
+package basic.redisstudy.util;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

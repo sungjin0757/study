@@ -1,7 +1,7 @@
 package basic.redisstudy.learningtest;
 
 import basic.redisstudy.learningtest.entity.UserTestEntity;
-import basic.redisstudy.learningtest.util.RedisTemplateUtil;
+import basic.redisstudy.util.RedisTemplateUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
