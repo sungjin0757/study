@@ -4,25 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="43a53663-839f-4988-8497-573224278356" name="Changes" comment="Add DeciderConfiguration">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mvnw" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mvnw.cmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/basic/springbatch/SpringBatchApplication.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/basic/springbatch/config/CustomConditionalJobConfiguration.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/basic/springbatch/config/DeciderConfiguration.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/basic/springbatch/config/SampleJobConfiguration.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/basic/springbatch/config/SimpleConditionalJobConfiguration.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/basic/springbatch/listener/SampleJobListener.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/basic/springbatch/listener/SampleStepListener.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/basic/springbatch/listener/SkipCheckListener.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/basic/springbatch/service/SecondTasklet.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/basic/springbatch/SpringBatchApplicationTests.java" beforeDir="false" />
-    </list>
+    <list default="true" id="43a53663-839f-4988-8497-573224278356" name="Changes" comment="Add DeciderConfiguration" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
