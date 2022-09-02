@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="43a53663-839f-4988-8497-573224278356" name="Changes" comment="Add DeciderConfiguration" />
+    <list default="true" id="43a53663-839f-4988-8497-573224278356" name="Changes" comment="Add DeciderConfiguration">
+      <change beforePath="$PROJECT_DIR$/chunk-oriented-tasklet/src/main/java/basic/chunkorientedtasklet/ChunkOrientedTaskletApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/chunk-oriented-tasklet/src/main/java/basic/chunkorientedtasklet/ChunkOrientedTaskletApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chunk-oriented-tasklet/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/chunk-oriented-tasklet/src/main/resources/application.yml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
