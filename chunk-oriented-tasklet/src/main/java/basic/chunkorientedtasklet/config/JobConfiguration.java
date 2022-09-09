@@ -10,6 +10,7 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.JpaPagingItemReader;
@@ -26,6 +27,7 @@ public class JobConfiguration {
     private final JdbcPagingItemReader<User> jdbcPagingItemReader;
     private final JpaPagingItemReader<User> jpaPagingItemReader;
     private final ItemWriter<User> customLogUserItemWriter;
+    private final JdbcBatchItemWriter<User> jdbcBatchItemWriter;
 
     @Bean
     public Job jdbcCursorItemJob() {
@@ -41,7 +43,7 @@ public class JobConfiguration {
         return stepBuilderFactory.get("Cursor item Step - JDBC")
                 .<User, User>chunk(BatchJobProperty.CHUNK_SIZE)
                 .reader(jdbcCursorItemReader)
-                .writer(customLogUserItemWriter)
+                .writer(jdbcBatchItemWriter)
                 .build();
     }
 
