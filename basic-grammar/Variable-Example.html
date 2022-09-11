@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            //var 선언자
+            var x = 5;
+            var y = 6;
+            var z = x + y;
+            console.log("x = ", x);
+            console.log("y = ", y);
+            console.log("z = ", z);
+
+            var x = 7; // 재선언, var 로 했을 때 특징 중하나. 동일한 변수명으로 재선언 가능 
+            z = x + y; // 이미 선언된 변수에 새로운 값을 전달
+            console.log("x = ", x);
+            console.log("z = ", z);
+            
+            //let
+            let x1 = 5;
+            let y1 = 6;
+            let z1 = x1 + y1;
+
+            // let x = 7; // 에러 발생. 동일한 이름으로 불가능 한 것을 알 수 있음
+            console.log("x1 = ", x1);
+            console.log("y1 = ", y1);
+            console.log("z1 = ", z1);
+
+            //const (final 로 이해하면 좋을 듯. 상수)
+            const x2 = 3;
+
+            // const x2 = 4; //에러 발생. 재선언 불가.
+            // x2 = 4; //재 정의 불가.
+        </script>
+    </body>
+</html>

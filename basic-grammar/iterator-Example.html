@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            for(var i = 0; i < 5; i++){
+                console.log("The Number is " + i);
+            }
+
+            var numbers = [1, 2, 3, 4];
+            for(var i = 0; i < numbers.length; i++){
+                console.log(numbers[i]);
+            }
+
+            numbers.forEach(n => {
+                console.log(n);
+            });
+
+            for(var num in numbers){
+                console.log(num);
+            }
+
+            var person = {
+                name : "Hong Sungjin",
+                age : 12
+            }
+
+            for(var key in person){
+                console.log(person[key]);
+            }
+
+            var cars = ["BMW", "Benz"];
+            for(var car of cars){
+                console.log(car);
+            }
+
+            var i = 1;
+            var total = 0;
+            while(i < 5){
+                total += i;
+                console.log(total)
+                i++;
+            }
+        </script>
+    </body>
+</html>
