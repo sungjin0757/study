@@ -1,6 +1,7 @@
 package basic.chunkorientedtasklet.config;
 
 import basic.chunkorientedtasklet.common.property.BatchJobProperty;
+import basic.chunkorientedtasklet.domain.JpaWriterTestUser;
 import basic.chunkorientedtasklet.domain.User;
 import basic.chunkorientedtasklet.listener.LogJobListener;
 import lombok.RequiredArgsConstructor;
@@ -9,11 +10,9 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.JdbcCursorItemReader;
-import org.springframework.batch.item.database.JdbcPagingItemReader;
-import org.springframework.batch.item.database.JpaPagingItemReader;
+import org.springframework.batch.item.database.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,6 +27,8 @@ public class JobConfiguration {
     private final JpaPagingItemReader<User> jpaPagingItemReader;
     private final ItemWriter<User> customLogUserItemWriter;
     private final JdbcBatchItemWriter<User> jdbcBatchItemWriter;
+    private final ItemProcessor<User, JpaWriterTestUser> itemProcessor;
+    private final JpaItemWriter<JpaWriterTestUser> jpaItemWriter;
 
     @Bean
     public Job jdbcCursorItemJob() {
@@ -77,9 +78,10 @@ public class JobConfiguration {
     @Bean
     public Step jpaPagingStep() {
         return stepBuilderFactory.get("Paging Item Step - JPA")
-                .<User, User>chunk(10)
+                .<User, JpaWriterTestUser>chunk(10)
                 .reader(jpaPagingItemReader)
-                .writer(customLogUserItemWriter)
+                .processor(itemProcessor)
+                .writer(jpaItemWriter)
                 .build();
     }
 
