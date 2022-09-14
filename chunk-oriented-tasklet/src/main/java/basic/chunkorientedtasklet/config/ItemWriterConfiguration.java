@@ -1,6 +1,7 @@
 package basic.chunkorientedtasklet.config;
 
 import basic.chunkorientedtasklet.domain.JpaWriterTestUser;
+import basic.chunkorientedtasklet.domain.ListItemTestEntity;
 import basic.chunkorientedtasklet.domain.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,13 @@ public class ItemWriterConfiguration {
     @Bean
     public JpaItemWriter<JpaWriterTestUser> jpaItemWriter() {
         return new JpaItemWriterBuilder<JpaWriterTestUser>()
+                .entityManagerFactory(entityManagerFactory)
+                .build();
+    }
+
+    @Bean
+    public JpaItemWriter<ListItemTestEntity> jpaListWriter() {
+        return new JpaItemWriterBuilder<ListItemTestEntity>()
                 .entityManagerFactory(entityManagerFactory)
                 .build();
     }

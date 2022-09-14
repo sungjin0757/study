@@ -2,8 +2,10 @@ package basic.chunkorientedtasklet.config;
 
 import basic.chunkorientedtasklet.common.property.BatchJobProperty;
 import basic.chunkorientedtasklet.domain.JpaWriterTestUser;
+import basic.chunkorientedtasklet.domain.ListItemTestEntity;
 import basic.chunkorientedtasklet.domain.User;
 import basic.chunkorientedtasklet.listener.LogJobListener;
+import basic.chunkorientedtasklet.service.JpaItemListWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -15,6 +17,9 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Arrays;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Configuration
@@ -29,6 +34,7 @@ public class JobConfiguration {
     private final JdbcBatchItemWriter<User> jdbcBatchItemWriter;
     private final ItemProcessor<User, JpaWriterTestUser> itemProcessor;
     private final JpaItemWriter<JpaWriterTestUser> jpaItemWriter;
+    private final JpaItemListWriter<ListItemTestEntity> jpaListWriter;
 
     @Bean
     public Job jdbcCursorItemJob() {
@@ -82,6 +88,28 @@ public class JobConfiguration {
                 .reader(jpaPagingItemReader)
                 .processor(itemProcessor)
                 .writer(jpaItemWriter)
+                .build();
+    }
+
+    @Bean
+    public Job jpaListJob() {
+        return jobBuilderFactory.get("List Item Job - JPA")
+                .incrementer(new RunIdIncrementer())
+                .listener(logJobListener)
+                .start(jpaListStep())
+                .build();
+    }
+
+    @Bean
+    public Step jpaListStep() {
+        return stepBuilderFactory.get("List Item Step - JPA")
+                .<User, List<ListItemTestEntity>>chunk(10)
+                .reader(jpaPagingItemReader)
+                .processor((ItemProcessor<User, List<ListItemTestEntity>>) item -> Arrays.asList(
+                        new ListItemTestEntity(item.getUserName(), item.getAge()),
+                        new ListItemTestEntity(item.getUserName() + " Test", item.getAge())
+                ))
+                .writer(jpaListWriter)
                 .build();
     }
 
