@@ -1,6 +1,7 @@
 import { IUser, UserModel } from '../model/user-model';
 import bcrypt from "bcryptjs";
 import { UserDto, UserLoginDto } from '../dto/user-dto';
+import { JwtUtil } from '../security/jwt-util';
 
 type UserRepository = typeof UserModel;
 
@@ -34,7 +35,8 @@ export default class UserService {
             throw new Error("Check UserId Or Password");
         }
 
-        return "jwt";
+        const jwt: string = JwtUtil.generateToken(findUser._id!);
+        return jwt;
     }
 
     async findAll(): Promise<IUser[]> {
