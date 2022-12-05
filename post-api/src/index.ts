@@ -2,6 +2,7 @@ import express, { urlencoded } from 'express';
 import mongoose from 'mongoose';
 import dotenv from "dotenv";
 import userRouter from './router/user-router';
+import postRouter from './router/post-router';
 
 dotenv.config();
 const app = express();
@@ -11,6 +12,7 @@ const port: number = 8000;
 app.use(express.json());
 app.use(urlencoded({extended: false}));
 app.use('/api/users', userRouter);
+app.use('/api/posts', postRouter);
 
 mongoose.connect(mongoUri!, {
     dbName: 'post-api'

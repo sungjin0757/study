@@ -15,6 +15,7 @@ export interface IUser {
 const userSchema: Schema<IUser> = new Schema({
     userId: {
         type: String,
+        unique: true,
         required: true
     },
     password: {
