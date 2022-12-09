@@ -69,3 +69,17 @@ console.log(userRoles.size === 3); // true
 // map의 요소를 모두 지울 때는 clear()를 사용
 userRoles.clear()
 console.log(userRoles.size === 0); // true
+
+
+/**
+ * map 생성자 함수는 이터러블을 인수로 전달 받아 Map 객체를 생성한다. 이 때 인수로 전달되는 이터러블은 키와 값의 쌍으로 이루어진 요소로 구성되어야 한다.
+ */
+const map = new Map(['key1', 'value1'], ['key2', 'value2']);
+const {size} = new Map(['key1', 'value1'], ['key2', 'value2']);
+console.log(size); // 2
+
+/**
+ * map.prototype.keys : Map 객체에서 요소키를 값으로 갖는 이터러블이면서 동시에 이터레이터인 객체를 반환한다.
+ * map.protorype.values : Map 객체에서 요소값을 값으로 갖는 이터러블이면서 동시에 이터레이터인 객체를 반환한다.
+ * map.prototype.entries : Map 객체에서 요소키와 요소값을 값으로 갖는 이터러블이면서 동시에 이터레이터인 객체를 반환한다.
+ */
