@@ -10,6 +10,7 @@
  * 비동기적 처리를 여기서 하지 않고 다른 함수에서 처리하게 하고 싶다면 프로미스를 넘기기만 하면 된다.
  */
 
+const { resolve } = require("path");
 const { EventEmitter } = require("stream");
 
 // 프로미스 만들기
@@ -126,3 +127,103 @@ c.go()
 });
 
 
+/**
+ * Promise.all
+ * 여러 개의 비동기 처리를 모두 병렬 처리할 때 사용 한다.
+ */
+const requestData1 = () => {
+    new Promise(resolve => setTimeout(() => resolve(1), 3000));
+}
+const requestData2 = () => {
+    new Promise(resolve => setTimeout(() => resolve(2), 2000));
+}
+const requestData3 = () => {
+    new Promise(resolve => setTimeout(() => resolve(3), 1000));
+}
+
+// 세 개의 비동기 처리 메서드를 순차적으로 처리
+// 약 6 초 정도의 시간이 걸림
+const res = [];
+requestData1().then(data => {
+    res.push(data);
+    return requestData2();
+}).then(data => {
+    res.push(data);
+    return requestData3();
+}).then(data => {
+    res.push(data);
+    console.log(res); // [1, 2, 3]
+});
+
+// 약 3 초가 걸림
+Promise.all([requestData1(), requestData2(), requestData3()])
+    .then(console.log) // [1, 2, 3]
+    .catch(console.error);
+
+/**
+  * Promise.all 메서드는 프로미스를 오소로 갖는 배열 등의 이터러블을 인수로 전달 받는다. 그리고 전달받은 모든 프로미스가 fulfilled 상태가 되면
+  * 모든 처리 결과를 배열에 저장해 새로운 프로미스를 반환한다.
+  *  이 때 첫번째 프로미스가 처리순서가 늦어 지더라고 resolve 한 처리 결과부터 차례대로 배열에 저장해 그 배열을 resolve 하는 새로운 프로미스를 반환한다. 즉, 처리 순서가 보장 된다.
+  * Promise.all 메서드는 인수로 전달받은 배열의 프로미스가 하나라도 rejected 상태가 되면 나머지 프로미스가 fulfilled 상태가 되는 것을 기다리지 않고 즉시 종료한다.
+  */
+Promise.all([
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error 1'), 3000))),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error 2'), 2000))),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error 3'), 1000)))
+])
+    .then(console.log)
+    .catch(console.error); // Error: Error 3
+
+/**
+ * Promise.all 메서드는 인수로 전달받은 이터러블의 요소가 프로미스가 아닌 경우 Promise.resolve 메서드를 통해 프로미스로 래핑한다.
+ */
+Promise.all([
+    1, // -> Promise.resolve(1) 
+    2, // -> Promise.resolve(2)
+    3 // -> Promise.resolve(3)
+]);
+
+/**
+ * Promise.race
+ * Promise.race 메서드는 Promise.all 메서드와 동일하게 프로미스를 요소로 갖는 배열 등의 이터러블을 인수로 전달 받는다.
+ * 가장 먼저 fulfilled 상태가 된 프로미스의 처리 결과를 resolve하는 새로운 프로미스를 반환한다.
+ */
+Promise.race([
+    new Promise(resolve => setTimeout(() => resolve(1), 3000)),
+    new Promise(resolve => setTimeout(() => resolve(2), 2000)),
+    new Promise(resolve => setTimeout(() => resolve(3), 1000))
+])
+    .then(console.log) // 3
+    .catch(console.error);
+
+// 프로미스가 rejected 상태가 되면 Promise.all 메서드와 동일하게 처리된다. 즉, Promise.race 메서드에 전달된 프로미스가 하나라도 rejected 상태가 되면 에러를 reject 하는 새로운 프로미스를 즉시 반환한다.
+Promise.race([
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error 1'), 3000))),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error 2'), 2000))),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error 3'), 1000)))
+])
+    .then(console.log)
+    .catch(console.error); // Error: Error 3
+
+/**
+ * Promise.allSettled
+ * 프로미스를 요소로 갖는 배열 등의 이터러블을 인수로 전달받는다. 그리고 전달 받은 프로미스가 모두 settled 상태(비동기 처리가 수행된 상태, 즉 fulfilled 또는 rejected 상태) 가 되면 처리 결과를 배열로 반환한다.
+ */
+Promise.allSettled([
+    new Promise(resolve => setTimeout(() => resolve(1), 2000)),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Error!'), 1000)))
+])
+    .then(console.log);
+/*
+[
+    {status: "fulfilled", value: 1},
+    {status: "rejected", reson: Error: Error! at <anonymous>:3:54}
+]
+*/
+
+/**
+ * 마이크로 태스크 큐
+ * 프로미스의 후속 처리 메서드의 콜백 함수는 태스크 큐가 아니라 마이크로태스크 큐에 저장됨
+ * 마이크로태스크 큐는 태스크 큐보다 우선순위가 높음
+ * 즉, 이벤트 루프는 콜 스택이 비면 먼저 마이크로태스크 큐에서 대기하고 있는 함수를 가져와 실행
+ */
