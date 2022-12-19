@@ -1,11 +1,13 @@
 package basic.shop.order.command.domain.entiy;
 
 import basic.shop.catalog.command.domain.Product;
+import basic.shop.catalog.command.domain.ProductId;
 import basic.shop.common.model.AbstractBaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import java.util.Objects;
 
@@ -14,15 +16,12 @@ import java.util.Objects;
 @AllArgsConstructor
 @ToString(of = {"id", "price", "quantity", "amounts", "product"})
 public class OrderLine extends AbstractBaseEntity {
-    private Long id;
+    @EmbeddedId
+    private ProductId id;
     private int price;
     private int quantity;
     private int amounts;
     private Product product;
-
-    public Long getId() {
-        return id;
-    }
 
     private int calculateAmounts() {
         return price * quantity;
