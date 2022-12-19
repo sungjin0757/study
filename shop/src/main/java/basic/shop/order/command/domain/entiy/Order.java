@@ -32,9 +32,9 @@ public class Order extends AbstractBaseEntity {
         setShippingInfo(shippingInfo);
     }
 
-    public void changeShippingInfo(ShippingInfo shippingInfo) {
+    public void changeShippingInfo(ShippingInfo newShippingInfo) {
         verifyNotYetShipped();
-        this.shippingInfo = shippingInfo;
+        setShippingInfo(newShippingInfo);
     }
 
     public void cancel() {
@@ -59,13 +59,13 @@ public class Order extends AbstractBaseEntity {
         this.totalAmounts = new Money(sum);
     }
 
-    private void setShippingInfo(ShippingInfo shippingInfo) {
+    private void setShippingInfo(ShippingInfo newShippingInfo) {
         try {
-            Objects.requireNonNull(shippingInfo, "no ShippingInfo");
+            Objects.requireNonNull(newShippingInfo, "no ShippingInfo");
         } catch(NullPointerException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
-        this.shippingInfo = shippingInfo;
+        this.shippingInfo = newShippingInfo;
     }
 
     private void verifyNotYetShipped() {
