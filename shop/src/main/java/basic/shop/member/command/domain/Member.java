@@ -1,5 +1,6 @@
 package basic.shop.member.command.domain;
 
+import basic.shop.common.model.AbstractBaseEntity;
 import lombok.Getter;
 
 import javax.persistence.Embedded;
@@ -9,7 +10,7 @@ import java.util.Objects;
 
 @Entity
 @Getter
-public class Member {
+public class Member extends AbstractBaseEntity {
     @EmbeddedId
     private MemberId memberId;
     @Embedded

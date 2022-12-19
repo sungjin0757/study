@@ -1,4 +1,6 @@
 package basic.shop.catalog.command.domain;
 
-public class Product {
+import basic.shop.common.model.AbstractBaseEntity;
+
+public class Product extends AbstractBaseEntity {
 }
