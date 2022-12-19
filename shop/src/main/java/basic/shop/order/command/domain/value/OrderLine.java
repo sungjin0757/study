@@ -1,4 +1,4 @@
-package basic.shop.order.command.domain.entiy;
+package basic.shop.order.command.domain.value;
 
 import basic.shop.catalog.command.domain.Product;
 import basic.shop.catalog.command.domain.ProductId;

@@ -2,6 +2,7 @@ package basic.shop.order.command.domain.entiy;
 
 import basic.shop.common.model.AbstractBaseEntity;
 import basic.shop.common.model.Money;
+import basic.shop.order.command.domain.value.OrderLine;
 import basic.shop.order.command.domain.value.OrderNo;
 import basic.shop.order.command.domain.value.OrderState;
 import basic.shop.order.command.domain.value.ShippingInfo;
