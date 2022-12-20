@@ -1,0 +1,41 @@
+spring:
+  profiles:
+    active: local
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+        user_sql_comments: true
+#logging.level.org.springframework.batch: DEBUG
+---
+
+spring:
+  profiles: local
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+      path: /h2-console
+  datasource:
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    url: jdbc:h2:mem:testDb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+
+---
+
+spring:
+  profiles: mysql
+  jpa:
+    hibernate:
+      properties:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/spring_batch?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: batch
+    password: batch
