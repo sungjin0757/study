@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            var vat = 0.1;
+            var tax = 10 * vat;
+
+            function calculateTax(profit, vat){
+                return vat * 0.1;
+            }
+
+            console.log(calculateTax(10, 0.1));
+
+            function calculator(x1, y1, operator){
+                switch(operator){
+                    case "+":
+                        return x1 + y1;
+                        break;
+                    case "-":
+                        return x1 - y1;
+                        default: break;
+                }
+            }
+
+            console.log(calculator(1, 2 , "+"));
+            console.log(calculator(1, 2 , "-"));
+        </script>
+    </body>
+</html>
