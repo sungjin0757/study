@@ -103,6 +103,36 @@ fun printProblemCounts(responses: Collection<String>) {
     }
 }
 
+/**
+ * 멤버 참조
+ * 람다를 사용해 코드 블록을 다른 함수에게 인자로 넘기는 방법을 살펴봤다. 하지만 넘기려는 코드가
+ * 이미 함수로 선언된 경우는 어떻게 해야 할까? 물론 그 함수를 호출하는 람다를 만들면 된다.
+ * 하지만 이는 중복이다. 함수를 직접 넘길수는 없을까
+ * 코틀린에서는 자바8과 마찬가지로 함수를 값으로 바꿀 수 있다.
+ * 멤버 참조는 프로퍼티나 메서드를 단 하나만 호출하느 함수 값을 만들어준다.
+ */
+val getAge2 = Person::age
+
+// 최상위에 선언된 하무나 프로퍼티를 참조할 수도 있다.
+fun test() = println("test")
+val test2 = ::test
+
+val action = {
+    person: Person, message: String -> test()
+}
+
+val nextAction = ::action
+
+// 생성자 참조를 사용하면 클래스 생성 작업을 연기하거나 저장해둘 수 있다.
+val createPerson = ::Person
+val p = createPerson("a", 1)
+
+//확장 함수도 멤버 함수와 똑같은 방식으로 참조할 수 있다는 점을 기억하가.
+fun Person.isAdult(): Boolean {
+    return age >= 21
+}
+val predicate = Person::isAdult
+
 fun main(args: Array<String>) {
     { println(42) }() // 람다 식을 직접 호출
     run { println(42) }  // run 을 사용하는 것이 더욱 가독력에도 좋다.
