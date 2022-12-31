@@ -133,6 +133,76 @@ fun Person.isAdult(): Boolean {
 }
 val predicate = Person::isAdult
 
+/**
+ * 수신 객체 지정 람다 : with 와 apply
+ * 자바의 람다에는 없는 코틀린 람다의 독특한 기능을 설명한다.
+ * 그 기능은 바로 수신 객체를 명시하지 않고 람다의 본문 안에서 다른 객체의 메서드를 호출할 수 있게 하는 것이다.
+ * 그런 람다를 수신 객체 지정 람다라고 부른다.
+ */
+
+/**
+ * with 함수
+ * 어떤 객체의 이름을 반복하지 않고도 그 객체에 대한 다양한 연산을 수행할 수 있다면 좋을 것이다.
+ * 코틀린은 이러한 기능을 with 라는 라이브러리 함수를 통해 제공한다.
+ * 첫 번째 인자로 받은 객체를 두 번째 인자로 받은 람다의 수신 객체로 만든다.
+ * 인자로 받은 람다 본문에서는 this를 사용해 그 수신 객체에 접근할 수 있다.
+ * 일반적인 this 와 마찬가지로 this와 점을 사용하지 않고 프로퍼티나 메서드 이름만 사용해도 수신 객체의 멤버에 접근할 수 있다.
+ * with 가 반환하는 값은 람다 코드를 실행한 결과며, 그 결과는 람다 식의 본문에 있는 마지막 식의 값이다.
+ * 하지만 때로는 람다의 결과 대신 수신 객체가 필요한 경우도 있다.
+ * 그럴 때는 apply 함수를 사용할 수 있다.
+ */
+fun alphabet(): String {
+    val result = StringBuilder()
+    for (letter in 'A' .. 'Z') {
+        result.append(letter)
+    }
+    result.append("\nNow I know the alphabet")
+    return result.toString()
+}
+
+fun alphabetVWith(): String {
+    val stringBuilder = StringBuilder()
+    return with(stringBuilder) {
+        for(letter in 'A' .. 'Z') {
+            this.append(letter)
+        }
+        this.append("\nNow I know the alphabet")
+        this.toString()
+    }
+}
+
+fun alphabetVWithRefactoring(): String {
+    return with(StringBuilder()) {
+        for(letter in 'A' .. 'Z') {
+            this.append(letter)
+        }
+        this.append("\nNow I know the alphabet")
+        this.toString()
+    }
+}
+
+/**
+ * apply 함수
+ * 거의 with 와 동일하다. 유일한 차이란 apply는 항상 자신에게 전달된 객체를 반환한다는 점 뿐이다.
+ */
+fun alphabetVApply(): String {
+    return StringBuilder().apply {
+        for(letter in 'A' .. 'Z') {
+            append(letter)
+        }
+        append("\nNow I know the alphabet")
+    }.toString()
+}
+
+fun alphabetVBuildString(): String {
+    return buildString {
+        for(letter in 'A' .. 'Z') {
+            append(letter)
+        }
+        append("\nNow I know the alphabet")
+    }
+}
+
 fun main(args: Array<String>) {
     { println(42) }() // 람다 식을 직접 호출
     run { println(42) }  // run 을 사용하는 것이 더욱 가독력에도 좋다.
