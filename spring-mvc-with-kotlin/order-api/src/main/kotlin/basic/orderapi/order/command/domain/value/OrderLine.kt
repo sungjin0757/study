@@ -16,7 +16,7 @@ class OrderLine (
     var quantity: Int,
 ) {
     @Convert(converter = MoneyConverter::class)
-    private var amounts: Money = calculateAmounts()
+    var amounts: Money = calculateAmounts()
         get() {
             return amounts
         }
