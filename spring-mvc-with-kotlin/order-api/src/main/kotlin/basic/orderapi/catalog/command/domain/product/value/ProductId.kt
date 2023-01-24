@@ -8,7 +8,7 @@ import javax.persistence.Embeddable
 
 @Embeddable
 @Access(AccessType.FIELD)
-class ProductId (
+class ProductId(
     @Column(name = "product_id")
     var id: String
 ): Serializable {

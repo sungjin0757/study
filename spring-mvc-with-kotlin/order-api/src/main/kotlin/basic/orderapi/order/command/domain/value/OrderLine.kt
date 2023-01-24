@@ -16,12 +16,12 @@ class OrderLine (
     var quantity: Int,
 ) {
     @Convert(converter = MoneyConverter::class)
-    var amounts: Money = calculateAmounts()
+    var amounts: Money = calculateAmounts(price, quantity)
         get() {
             return amounts
         }
 
-    private fun calculateAmounts(): Money {
+    private fun calculateAmounts(price:Money, quantity: Int): Money {
         return price.multiply(quantity)
     }
 
