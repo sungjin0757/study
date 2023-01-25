@@ -25,7 +25,7 @@ class PlaceOrderService (
         var orderLines: MutableList<OrderLine> = ArrayList<OrderLine>()
         for(orderProduct in orderRequest.orderProducts) {
             var productOpt: Optional<Product> = productRepository.findById(ProductId(orderProduct.productId))
-            var product = productOpt.orElseThrow() {NoOrderProductException(orderProduct.productId)}
+            var product = productOpt.orElseThrow {throw NoOrderProductException(orderProduct.productId)}
             orderLines.add(OrderLine(product.id!!, product.price, orderProduct.quantity))
         }
         var orderNo = OrderNo.generate()
