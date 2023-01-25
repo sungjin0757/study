@@ -1,6 +1,7 @@
 package basic.orderapi.member.command.domain.value
 
 import java.io.Serializable
+import java.util.UUID
 import javax.persistence.Column
 import javax.persistence.Embeddable
 
@@ -28,6 +29,11 @@ class MemberId(
     companion object {
         fun of(id: String): MemberId {
             return MemberId(id)
+        }
+
+        fun generate(): MemberId {
+            var randomNo = UUID.randomUUID().toString()
+            return MemberId(randomNo)
         }
     }
 }

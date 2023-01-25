@@ -1,6 +1,7 @@
 package basic.orderapi.catalog.command.domain.product.value
 
 import java.io.Serializable
+import java.util.UUID
 import javax.persistence.Access
 import javax.persistence.AccessType
 import javax.persistence.Column
@@ -25,5 +26,12 @@ class ProductId(
 
     override fun hashCode(): Int {
         return id.hashCode()
+    }
+
+    companion object {
+        fun generate(): ProductId {
+            var randomNo = UUID.randomUUID().toString()
+            return ProductId(randomNo)
+        }
     }
 }

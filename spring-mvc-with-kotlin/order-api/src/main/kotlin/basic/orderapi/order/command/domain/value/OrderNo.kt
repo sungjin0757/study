@@ -1,6 +1,8 @@
 package basic.orderapi.order.command.domain.value
 
 import java.io.Serializable
+import java.util.*
+import java.util.concurrent.ThreadLocalRandom
 import javax.persistence.Column
 import javax.persistence.Embeddable
 
@@ -22,5 +24,13 @@ class OrderNo (
 
     override fun hashCode(): Int {
         return number.hashCode()
+    }
+
+    companion object {
+        fun generate(): OrderNo {
+            var randomNo = ThreadLocalRandom.current().nextInt(900000) + 100000;
+            var number = String.format("%tY%<tm%<td%<tH-%d", Date(), randomNo)
+            return OrderNo(number)
+        }
     }
 }
