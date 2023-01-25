@@ -12,7 +12,7 @@ import javax.persistence.Embeddable
 @Access(AccessType.FIELD)
 class CategoryId (
     @Column(name = "category_id")
-    var value: Long
+    var value: String
 ): Serializable {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -30,9 +30,9 @@ class CategoryId (
     }
 
     companion object {
-        fun generate(): ProductId {
+        fun generate(): CategoryId {
             var randomNo = UUID.randomUUID().toString()
-            return ProductId(randomNo)
+            return CategoryId(randomNo)
         }
     }
 }
