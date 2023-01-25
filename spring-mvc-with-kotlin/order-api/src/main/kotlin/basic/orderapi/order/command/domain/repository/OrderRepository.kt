@@ -10,9 +10,4 @@ import java.util.concurrent.ThreadLocalRandom
 interface OrderRepository: CrudRepository<Order, OrderNo>,
     OrderRepositoryCustom, QuerydslPredicateExecutor<Order> {
 
-        fun  nextOrderNo(): OrderNo {
-            var randomNo = ThreadLocalRandom.current().nextInt(900000) + 100000;
-            var number = String.format("%tY%<tm%<td%<tH-%d", Date(), randomNo)
-            return OrderNo(number)
-        }
 }
