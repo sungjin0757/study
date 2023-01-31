@@ -8,7 +8,7 @@ import basic.orderapi.order.command.domain.value.Orderer
 
 data class OrderDto (
     var orderNumber: String,
-    var orderLines: List<OrderLine>,
+    var orderLineDtos: List<OrderLineDto>,
     var totalAmounts: Int,
     var orderState: OrderState,
     var shippingInfo: Address,
@@ -16,7 +16,8 @@ data class OrderDto (
 ) {
     companion object {
         fun ofOrder(order: Order): OrderDto {
-            return OrderDto(order.orderNumber!!.number, order.orderLines, order.totalAmounts.value,
+            val orderLineDtos = order.orderLines.map { OrderLineDto.ofOrderLine(it) }
+            return OrderDto(order.orderNumber!!.number, orderLineDtos, order.totalAmounts.value,
                 order.orderState, order.shippingInfo, order.orderer)
         }
     }
