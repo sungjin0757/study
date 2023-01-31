@@ -33,16 +33,6 @@ class Order (
     @Embedded
     var orderer: Orderer
 ): AbstractTimeEntity() {
-
-    private fun verifyAtLeastOneOrMoreOrderLines(orderLines: List<OrderLine>) {
-        if(orderLines.isNullOrEmpty())
-            throw IllegalArgumentException("No OrderLine")
-    }
-
-    private fun calculateTotalAmounts(orderLines: List<OrderLine>): Money {
-        return Money(orderLines.sumOf { it.amounts.value })
-    }
-
     companion object {
           fun generate(orderNumber: OrderNo, orderLines: List<OrderLine>,
                        shippingInfo: Address, orderState: OrderState, orderer: Orderer): Order {
