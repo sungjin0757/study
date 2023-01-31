@@ -13,36 +13,26 @@ import javax.persistence.*
 @Entity
 @Table(name = "purchase_order")
 @Access(AccessType.FIELD)
-class Order: AbstractTimeEntity {
+class Order (
     @EmbeddedId
-    var orderNumber: OrderNo?
+    var orderNumber: OrderNo?,
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "order_line", joinColumns = [JoinColumn(name = "order_number")])
-    var orderLines: MutableList<OrderLine>
+    var orderLines: MutableList<OrderLine>,
 
     @Convert(converter = MoneyConverter::class)
-    var totalAmounts: Money
+    var totalAmounts: Money,
 
     @Enumerated(EnumType.STRING)
-    var orderState: OrderState
+    var orderState: OrderState,
 
     @Embedded
-    var shippingInfo: Address
+    var shippingInfo: Address,
 
     @Embedded
     var orderer: Orderer
-
-    constructor(orderNumber: OrderNo, orderLines: List<OrderLine>,
-                shippingInfo: Address, orderState: OrderState, orderer: Orderer) {
-        verifyAtLeastOneOrMoreOrderLines(orderLines)
-        this.orderLines = orderLines.toMutableList()
-        this.totalAmounts = calculateTotalAmounts(orderLines)
-        this.orderNumber = orderNumber
-        this.orderState = orderState
-        this.shippingInfo = shippingInfo
-        this.orderer = orderer
-    }
+): AbstractTimeEntity() {
 
     private fun verifyAtLeastOneOrMoreOrderLines(orderLines: List<OrderLine>) {
         if(orderLines.isNullOrEmpty())
@@ -51,6 +41,22 @@ class Order: AbstractTimeEntity {
 
     private fun calculateTotalAmounts(orderLines: List<OrderLine>): Money {
         return Money(orderLines.sumOf { it.amounts.value })
+    }
+
+    companion object {
+          fun generate(orderNumber: OrderNo, orderLines: List<OrderLine>,
+                       shippingInfo: Address, orderState: OrderState, orderer: Orderer): Order {
+              verifyAtLeastOneOrMoreOrderLInes(orderLines)
+              return Order(orderNumber, orderLines.toMutableList(), calculateTotalAmounts(orderLines),
+                  orderState, shippingInfo, orderer)
+          }
+        private fun verifyAtLeastOneOrMoreOrderLInes(orderLines: List<OrderLine>) {
+            if(orderLines.isNullOrEmpty())
+                throw IllegalArgumentException("No OrderLine")
+        }
+        private fun calculateTotalAmounts(orderLines: List<OrderLine>): Money {
+            return Money(orderLines.sumOf { it.amounts.value })
+        }
     }
 
     override fun equals(other: Any?): Boolean {

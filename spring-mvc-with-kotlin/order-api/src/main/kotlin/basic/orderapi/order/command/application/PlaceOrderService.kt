@@ -31,7 +31,7 @@ class PlaceOrderService (
         var orderNo = OrderNo.generate()
         var orderer = ordererService.createOrderer(orderRequest.ordererMemberId)
 
-        var order = Order(orderNo, orderLines, orderRequest.shippingInfo, OrderState.PAYMENT_WAITING, orderer)
+        var order = Order.generate(orderNo, orderLines, orderRequest.shippingInfo, OrderState.PAYMENT_WAITING, orderer)
         orderRepository.save(order)
         return orderNo
     }
